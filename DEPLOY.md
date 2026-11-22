@@ -108,7 +108,7 @@ In a second terminal, run the health and readiness checks in step 3 with
    ```sh
    export BASE_URL='https://YOUR-ACTUAL-SERVICE.onrender.com'
    export GOOGLE_REDIRECT_URI="$BASE_URL/oauth/gmail/callback"
-   curl -fsS "$GOOGLE_REDIRECT_URI"
+   curl -fsS --max-time 120 "$GOOGLE_REDIRECT_URI"
    uv run --no-sync python -m scripts.get_refresh_token --hosted
    ```
 

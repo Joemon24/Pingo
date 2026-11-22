@@ -59,7 +59,7 @@ def main() -> None:
             flow.redirect_uri = redirect
             auth_url, state = flow.authorization_url(access_type="offline", prompt="consent")
             if not webbrowser.open(auth_url):
-                print("Open this authorization URL:", auth_url)
+                parser.error("Open hosted authorization from a machine with a local web browser")
             callback = getpass("Paste the redirected browser address here (hidden): ")
             flow.fetch_token(code=hosted_code(callback.strip(), redirect, state))
             creds = flow.credentials
@@ -69,6 +69,7 @@ def main() -> None:
             )
             creds = flow.run_local_server(
                 port=0, access_type="offline", prompt="consent", timeout_seconds=180,
+                authorization_prompt_message=None,
             )
     except Exception as exc:
         parser.error(f"Google authorization could not complete ({type(exc).__name__})")
