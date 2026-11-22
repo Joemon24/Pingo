@@ -18,3 +18,16 @@ def test_saved_bluetooth_citations():
     draft.sources[1].claim = "The indicator flashes blue."
     with pytest.raises(CitationError, match="claim is not present"):
         verify_sources(draft, fixture["articles"])
+
+
+def test_replay_defers_native_rate_limit(monkeypatch):
+    from unittest.mock import Mock
+
+    from evals import bluetooth
+    from pydantic_ai.exceptions import ModelRateLimitError
+
+    monkeypatch.setattr(bluetooth, "write_reply", Mock(side_effect=ModelRateLimitError("fixture", "rate limited")))
+    row = bluetooth.trial("Customer: My earbuds will not pair.", {}, "pingo-v3-verbatim-citations")
+    assert row["rate_limited"]
+    assert row["error"] == "ModelRateLimitError"
+    assert not row["citation_pass"]

@@ -16,7 +16,8 @@ from app.ai.prompts import load_prompt
 from app.config import settings
 from app.gmail import strip_quoted
 from app.telemetry import execution
-from pydantic_ai.exceptions import ModelHTTPError
+from groq import RateLimitError
+from pydantic_ai.exceptions import ModelAPIError, ModelHTTPError, ModelRateLimitError
 
 
 def trial(thread, knowledge, version):
@@ -28,6 +29,9 @@ def trial(thread, knowledge, version):
             return write_reply(thread, section, prompt_version=version)
         except CitationError as exc:
             row["error"] = str(exc)
+            raise
+        except RateLimitError as exc:
+            row.update(error=type(exc).__name__, rate_limited=True)
             raise
         except ModelHTTPError as exc:
             row.update(error=type(exc).__name__, rate_limited=exc.status_code == 429)
@@ -41,6 +45,9 @@ def trial(thread, knowledge, version):
             db, "get_section", side_effect=knowledge.get
         ), patch.object(flow, "write_reply", generate):
             decision = flow.decide(thread)
+    except ModelAPIError as exc:
+        row.update(error=type(exc).__name__, rate_limited=isinstance(exc, ModelRateLimitError))
+        decision = SimpleNamespace(action="escalate")
     finally:
         execution.reset(token)
     generation = next((s for s in stages if s["stage"] == "generation"), {})
