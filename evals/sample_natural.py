@@ -65,7 +65,8 @@ def write_sample(
             "draft": row["draft"], "articles": row["articles"], "claims": [],
         })
         case["claims"].append({"id": row["claim_id"], "text": row["text"]})
-    dataset = {"stratum": "natural", "source_sha256": source_hash, "sampling_seed": seed,
+    dataset = {"scope": "Blind labeling of extracted claims from synthetic generated drafts.",
+               "stratum": "natural", "source_sha256": source_hash, "sampling_seed": seed,
                "sampling_rule": ("All claims extracted from one synthetic draft." if seed is None else
                                  "Even category allocation without replacement; redistribute exhausted strata."),
                "extraction_failures": failures, "cases": list(cases.values())}

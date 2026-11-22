@@ -193,6 +193,11 @@ def run_calibration(
         count["unsuccessful_drafts"] = count["failed_drafts"] + count["deferred_drafts"]
         count["recall"] = rate(count["covered"], count["claims"])
     return {
+        "scope": (
+            "Extractor span coverage over all provided references, including unsuccessful drafts."
+            if extraction else
+            "Agreement with reference annotations on fixed claims from the provided strata."
+        ),
         "validation_artifacts": validation_failures,
         "validation_rates": {
             phase: rate(validation_by_phase[phase], attempts_by_phase[phase])

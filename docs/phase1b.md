@@ -25,7 +25,7 @@ A failed agent prints FAILED plus its exception type and exits nonzero after att
 
 ## Calibration accounting
 
-Reports start with judge-failure count and failure types. Per seeded, natural, and combined stratum:
+Seed results measure agreement with reference annotations. Reports start with judge-failure count and failure types. Per seeded, natural, and combined stratum:
 - Excluding failures includes only successfully judged cases.
 - Failures-as-misses includes all human-positive unsupported claims in failed cases as false negatives. Failed non-positive claims remain unclassified, not true negatives. Precision is unchanged by missing predictions; recall and agreement decrease.
 - Raw TP/FP/FN/TN, class counts, prediction counts, failed non-positive counts, and sample sizes are retained.
@@ -90,3 +90,45 @@ Run the same calibration or extraction command with `--resume PATH_TO_PARTIAL_RE
 Use `--interval-seconds 25` when calls are repeatedly throttled. This waits between newly attempted cases and applies the same minimum delay to retries. Cached successes require no model call or additional wait. The delay is recorded in the output and can be changed between resumes. Rates are account and workload dependent.
 
 Validation failures from the quote and claim checks include a fixed `validation_issue` message in the report and the terminal. This lets you distinguish mismatched claim IDs, missing evidence, and quotes absent from the articles without saving rejected model content in the error log.
+
+## M0 diagnostics
+
+Calibration reports carry a `scope` field. For new model calls, first-attempt and after-retry
+validation rates have separate numerators, denominators, and Wilson 95% intervals. Successful
+cases reused from older reports do not enter the new-attempt rates. The retry here is the
+bounded rate-limit retry, outside any native schema retry inside Pydantic AI. Both failed and
+deferred extraction drafts contribute zero coverage over their full reference claim count.
+The seeded denominator is 45 across 15 drafts.
+
+Validation failures produce a separate ignored `*.validation-failures.json` beside the
+report. `python -m evals.triage_failure` accepts the sidecar path and a case ID. It checks
+the seed record first, then compares the captured inventory and article snapshot, checks for
+an exact quote under another ID, and uses punctuation/format-insensitive token comparison
+for a near-verbatim diagnostic. Unmatched quotes are classified as fabricated by that rule.
+Keep the original seed dataset for this comparison. Strict quote validation is active.
+The repeated-case command reports strict failure counts and `normalized: null` when no
+normalization was tested. An exact quote still needs a separate semantic judgment.
+
+### Gmail grounding spot check
+
+Leave the dashboard poller and background worker idle. From a separate account, manually
+send two new plain-text messages to the dedicated demo inbox. Use unique subjects beginning
+`Pingo M0` and leave delivery disabled throughout.
+
+| Subject example | Body |
+| --- | --- |
+| Pingo M0 Bluetooth 01 | My Gears and Co NG-BUDS2 earbuds won't connect to my phone. What should I try? |
+| Pingo M0 Missing 01 | For the NG-BUDS2, what exact LED blink pattern and interval in milliseconds confirms pairing mode? |
+
+```sh
+uv run --no-sync python -m scripts.demo_grounding capture --subject 'Pingo M0 Bluetooth 01' --output evals/results/bluetooth-01.json
+uv run --no-sync python -m scripts.demo_grounding capture --subject 'Pingo M0 Missing 01' --output evals/results/missing-01.json
+uv run --no-sync python -m scripts.demo_grounding label-form evals/results/bluetooth-01.json --judge-model "$PINGO_JUDGE_MODEL" --output-dir evals/results/bluetooth-01-blind
+```
+
+The capture processes the exact matching message through the normal pipeline and records the
+generation-time articles, raw structured draft with citations, final decision, and trace.
+Check that every troubleshooting claim follows from the cited article. For the missing
+detail, check for human review or an explicit statement that the detail is unavailable.
+An invented interval or LED behavior is a recorded failure. Review the blind form alongside
+its evidence and fill your own labels before looking at any judge predictions.
