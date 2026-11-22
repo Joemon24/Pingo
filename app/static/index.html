@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pingo | Support inbox</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+  <script src="/static/dashboard.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">P</span> Pingo</div>
+    <p class="workspace">GEARS AND CO</p>
+    <a class="nav" href="/">Support inbox</a>
+    <button id="knowledge-nav">Knowledge base</button>
+    <button id="eval-nav">Evaluations</button>
+    <p class="mode"><span></span> Draft-only mode</p>
+  </aside>
+  <main>
+    <header>
+      <div><h1>Support inbox</h1><p>Review AI drafts and triage customer cases.</p></div>
+      <button id="poll" class="primary">Check Gmail</button>
+    </header>
+    <p id="gmail-warning" role="alert" class="warning" hidden></p>
+    <p id="status" role="status" aria-live="polite"></p>
+    <section class="metrics" aria-label="Recent queue summary">
+      <div><span>Recent cases</span><strong id="total">–</strong></div>
+      <div><span>Drafts to review</span><strong id="pending">–</strong></div>
+      <div><span>Needs human</span><strong id="human">–</strong></div>
+    </section>
+    <section id="resources" class="panel details" hidden>
+      <div class="panel-header"><h2 id="resource-title"></h2><button id="resource-close">Close</button></div>
+      <div id="resource-body"></div>
+    </section>
+    <div class="layout">
+      <section class="panel">
+        <div class="panel-header"><h2>Cases</h2><label><span class="sr-only">Filter cases</span><select id="filter">
+          <option value="all">All cases</option><option value="draft">Drafts to review</option>
+          <option value="human">Needs human</option><option value="reviewed">Reviewed</option>
+        </select></label></div>
+        <div id="queue"></div>
+      </section>
+      <section class="panel details" aria-labelledby="subject">
+        <h2 id="subject">Select a case</h2>
+        <p id="reason">Choose an email to see its details.</p>
+        <div id="case-content" hidden>
+          <h3>Customer message</h3><p id="body" class="message"></p>
+          <div id="draft-content" hidden>
+            <label for="draft">Reply draft</label>
+            <textarea id="draft" maxlength="6000" rows="7"></textarea>
+            <p id="review-info"></p>
+            <div id="actions">
+              <button id="reject">Reject draft</button>
+              <button id="send" hidden>Send approved reply</button>
+              <button id="approve" class="primary">Approve draft</button>
+            </div>
+          </div>
+          <h3>Execution history</h3><pre id="trace" class="message"></pre>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

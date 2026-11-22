@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 
 import psycopg
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from google.auth.exceptions import RefreshError, TransportError
@@ -66,6 +66,17 @@ def health() -> dict:
     return {"status": "ok"}
 
 
+@app.get("/oauth/gmail/callback", response_class=PlainTextResponse)
+def gmail_oauth_callback() -> PlainTextResponse:
+    if not settings.google_redirect_uri:
+        raise HTTPException(404, "Hosted Gmail authorization is disabled")
+    # The initiating local process owns the state, PKCE verifier, and token exchange.
+    return PlainTextResponse(
+        "Return to your local Pingo authorization command and follow its instructions.",
+        headers={"Referrer-Policy": "no-referrer"},
+    )
+
+
 @app.get("/")
 def dashboard(_: Reviewer) -> FileResponse:
     return FileResponse(static / "index.html")
@@ -102,9 +113,14 @@ def poll(_: Reviewer) -> dict:
         from app.poller import poll_once
 
         return poll_once(max_results=1)
-    except RefreshError:
+    except RefreshError as exc:
         logger.warning("Inbox check failed: Google OAuth refresh rejected")
-        raise HTTPException(503, "Gmail authorization expired or was revoked. Reauthorize the connected account.") from None
+        if any(isinstance(arg, dict) and arg.get("error") == "invalid_grant" for arg in exc.args):
+            return JSONResponse(
+                {"detail": "Gmail connection expired, reauthorize", "code": "gmail-reauthorize"},
+                status_code=503,
+            )
+        raise HTTPException(503, "Gmail authorization could not be refreshed. Reauthorize if the error continues.") from None
     except TransportError:
         logger.warning("Inbox check failed: Google transport unavailable")
         raise HTTPException(503, "Cannot reach Google. Check the server network, DNS, and proxy configuration.") from None

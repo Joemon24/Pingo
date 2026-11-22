@@ -1,5 +1,5 @@
 import base64
-from email.message import EmailMessage
+from email.utils import parseaddr
 
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
@@ -13,6 +13,10 @@ ESCALATED_LABEL = "needs-human"
 
 class Gmail:
     def __init__(self) -> None:
+        if not all(value.strip() for value in (
+            settings.google_refresh_token, settings.google_client_id, settings.google_client_secret,
+        )):
+            raise RuntimeError("Gmail OAuth configuration is incomplete")
         creds = Credentials(
             token=None,
             refresh_token=settings.google_refresh_token,
@@ -58,21 +62,6 @@ class Gmail:
         label_id = self.label_ids[ESCALATED_LABEL]
         return any(label_id in m.get("labelIds", []) for m in thread["messages"])
 
-    def send_reply(self, message: dict, body: str) -> dict:
-        headers = get_headers(message)
-        subject = headers.get("subject", "")
-        reply = EmailMessage()
-        reply["To"] = headers.get("reply-to") or headers["from"]
-        reply["Subject"] = subject if subject.lower().startswith("re:") else f"Re: {subject}"
-        reply["In-Reply-To"] = headers["message-id"]
-        reply["References"] = f"{headers.get('references', '')} {headers['message-id']}".strip()
-        reply.set_content(body)
-        raw = base64.urlsafe_b64encode(reply.as_bytes()).decode()
-        return self.users.messages().send(
-            userId="me", body={"raw": raw, "threadId": message["threadId"]}
-        ).execute()
-
-
 def get_headers(message: dict) -> dict[str, str]:
     return {h["name"].lower(): h["value"] for h in message["payload"].get("headers", [])}
 
@@ -81,7 +70,7 @@ def get_body(message: dict) -> str:
     def find_text(part: dict) -> str:
         data = part.get("body", {}).get("data")
         if part.get("mimeType") == "text/plain" and data:
-            return base64.urlsafe_b64decode(data).decode("utf-8", errors="replace")
+            return base64.urlsafe_b64decode(data + "=" * (-len(data) % 4)).decode("utf-8", errors="replace")
         for child in part.get("parts", []):
             if text := find_text(child):
                 return text
@@ -114,6 +103,6 @@ def format_thread(thread: dict, own_address: str) -> str:
     parts = [f"Subject: {first.get('subject', '')}"]
     for message in thread["messages"]:
         sender = get_headers(message).get("from", "")
-        role = "Harbor & Pine support" if own_address.lower() in sender.lower() else "Customer"
-        parts.append(f"{role} ({sender}):\n{strip_quoted(get_body(message))}")
+        role = "Gears and Co Support" if parseaddr(sender)[1].lower() == own_address.lower() else "Customer"
+        parts.append(f"{role}:\n{strip_quoted(get_body(message))}")
     return "\n\n".join(parts)

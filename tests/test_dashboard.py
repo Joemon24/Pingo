@@ -159,3 +159,34 @@ def test_readiness_checks_config_and_required_database_tables(dashboard, monkeyp
     monkeypatch.delenv("GROQ_API_KEY")
     assert client.get("/ready", auth=auth).status_code == 503
     connect.assert_not_called()
+
+
+def test_invalid_grant_has_redacted_reauthorization_status(dashboard, monkeypatch, caplog):
+    from app import poller
+    from google.auth.exceptions import RefreshError
+
+    _, client = dashboard
+    private = "private provider credential"
+    gmail = Mock()
+    gmail.list_new_message_ids.return_value = ["demo-id"]
+    monkeypatch.setattr(poller, "Gmail", Mock(return_value=gmail))
+    monkeypatch.setattr(poller, "handle_message", Mock(side_effect=RefreshError(
+        private, {"error": "invalid_grant", "error_description": private},
+    )))
+    monkeypatch.setattr(poller.settings, "dry_run", True)
+    response = client.post("/api/poll", auth=("reviewer", "test-password"),
+                           headers={"X-Pingo-Action": "dashboard"})
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Gmail connection expired, reauthorize", "code": "gmail-reauthorize"}
+    assert private not in response.text + caplog.text
+    assert 'id="gmail-warning" role="alert"' in client.get("/", auth=("reviewer", "test-password")).text
+
+
+def test_hosted_callback_does_not_echo_query(dashboard, monkeypatch):
+    main, client = dashboard
+    monkeypatch.setattr(main.settings, "google_redirect_uri", "https://demo.invalid/oauth/gmail/callback")
+    response = client.get("/oauth/gmail/callback?code=private-code&state=private-state")
+    assert response.status_code == 200
+    assert response.headers["Referrer-Policy"] == "no-referrer"
+    assert response.headers["Cache-Control"] == "no-store"
+    assert "private" not in response.text
