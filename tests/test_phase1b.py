@@ -411,3 +411,26 @@ def test_extractor_validation_retains_rejected_span():
     assert rejected["attempt"] == "first"
     assert rejected["rejected_output"] == invalid.model_dump()
     assert report["validation_rates"]["first"]["numerator"] == 1
+
+
+def test_extraction_denominator_includes_all_seed_drafts_after_rate_limit(monkeypatch):
+    from pydantic_ai.exceptions import ModelRateLimitError
+    from evals import calibrate
+
+    dataset = json.loads(Path("evals/groundedness_seeds.json").read_text())
+    # Placeholder values only exercise accounting, with no reference predictions.
+    claim_ids = {
+        case["id"] + "/" + claim["id"]: None
+        for case in dataset["cases"] for claim in case["claims"]
+    }
+    extractor = Mock()
+    extractor.run_sync.side_effect = ModelRateLimitError("fixture", "rate limited", retry_after=1)
+    monkeypatch.setattr(calibrate, "sleep", Mock())
+    report = calibrate.run_calibration([(dataset, claim_ids)], extractor, None, True, interval_seconds=25)
+    total = report["extraction_total"]
+    assert (total["claims"], total["failed_drafts"], total["deferred_drafts"]) == (45, 1, 14)
+    assert total["recall"]["numerator"] == 0
+    assert total["recall"]["denominator"] == 45
+    assert {row["claims"] for row in report["extraction"].values()} == {15}
+    assert [row["status"] for row in report["extraction_cases"]] == ["failed"] + ["deferred"] * 14
+    assert extractor.run_sync.call_count == 2

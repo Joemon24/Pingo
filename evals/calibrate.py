@@ -87,6 +87,7 @@ def run_calibration(
 ) -> dict:
     results, failures, rows = [], [], []
     extraction_counts: dict[str, dict] = {}
+    extraction_cases = []
     previous_results = previous_results or {}
     rate_limit_blocked = False
     model_call_attempted = False
@@ -113,6 +114,13 @@ def run_calibration(
                 count["drafts"] += 1
                 count["claims"] += len(case["claims"])
                 count["deferred_drafts"] += int(deferred)
+                extraction_case = {
+                    "case_id": key, "seed_type": kind, "claims": len(case["claims"]),
+                    "covered": 0, "status": "deferred" if deferred else "failed",
+                }
+                extraction_cases.append(extraction_case)
+                if deferred:
+                    extraction_case["error_type"] = "DeferredAfterRateLimit"
             if not deferred:
                 attempts: list[str] = []
                 try:
@@ -130,10 +138,12 @@ def run_calibration(
                             ).output
                             validate_inventory(case["draft"], inventory)
                             result["inventory"] = inventory.model_dump()
-                        count["covered"] += sum(
+                        extraction_case["covered"] = sum(
                             any(claim_covered(claim["text"], found.text) for found in inventory.claims)
                             for claim in case["claims"]
                         )
+                        count["covered"] += extraction_case["covered"]
+                        extraction_case["status"] = "reused" if key in previous_results else "completed"
                     else:
                         if key in previous_results:
                             grade = Grade.model_validate(result["grade"])
@@ -148,6 +158,7 @@ def run_calibration(
                 except Exception as exc:
                     if extraction:
                         count["failed_drafts"] += 1
+                        extraction_case["error_type"] = type(exc).__name__
                     failure = {
                         "case_id": key, "stage": "extraction" if extraction else "grading",
                         "error_type": type(exc).__name__,
@@ -174,7 +185,12 @@ def run_calibration(
                     "actual": predicted.get(claim["id"]), "flagged": bool(flags), "flags": flags,
                 })
             results.append(result)
-    for count in extraction_counts.values():
+    totals = {
+        field: sum(count[field] for count in extraction_counts.values())
+        for field in ("covered", "claims", "drafts", "failed_drafts", "deferred_drafts")
+    }
+    for count in [*extraction_counts.values(), totals]:
+        count["unsuccessful_drafts"] = count["failed_drafts"] + count["deferred_drafts"]
         count["recall"] = rate(count["covered"], count["claims"])
     return {
         "validation_artifacts": validation_failures,
@@ -188,6 +204,8 @@ def run_calibration(
         "deferred_cases": deferred_cases,
         "metrics": summarize(rows) if not extraction else None,
         "extraction": extraction_counts if extraction else None,
+        "extraction_total": totals if extraction else None,
+        "extraction_cases": extraction_cases if extraction else None,
         "extraction_rule": "Casefolded word-token span containment, or >=90% multiset seed-token recall against one extracted claim. Extra words allowed; this measures span coverage, not atomicity or entailment.",
         "claim_results": rows, "results": results,
     }
@@ -272,7 +290,10 @@ def main(argv=None) -> None:
     print("Cases deferred:", len(report["deferred_cases"]))
     if args.extraction:
         print("Extraction failures:", len(report["failures"]))
-    print(json.dumps(report["extraction"] if args.extraction else report["metrics"], indent=2))
+    if args.extraction:
+        print(json.dumps({"total": report["extraction_total"], "by_seed_type": report["extraction"]}, indent=2))
+    else:
+        print(json.dumps(report["metrics"], indent=2))
 
 
 if __name__ == "__main__":
