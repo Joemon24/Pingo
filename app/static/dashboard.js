@@ -2,6 +2,7 @@ const $ = (id) => document.getElementById(id);
 let cases = [];
 let selected = null;
 let detailRequest = 0;
+let deliveryEnabled = false;
 
 async function request(url, options) {
   const response = await fetch(url, options);
@@ -69,7 +70,7 @@ async function openCase(id) {
   $("case-content").hidden = false;
   $("draft-content").hidden = entry.action !== "reply";
   $("trace").textContent = JSON.stringify({trace_id: entry.trace_id, stages: entry.stages, sources: entry.sources, delivery: entry.delivery_status}, null, 2);
-  $("send").hidden = entry.review !== "approve" || Boolean(entry.delivery_status);
+  $("send").hidden = !deliveryEnabled || entry.review !== "approve" || Boolean(entry.delivery_status);
   $("draft").value = entry.draft || "";
   $("draft").readOnly = Boolean(entry.review);
   $("review-info").textContent = entry.review
@@ -130,6 +131,11 @@ $("poll").addEventListener("click", async () => {
     $("poll").disabled = false;
   }
 });
+request("/api/status").then((status) => {
+  deliveryEnabled = status.delivery_enabled === true;
+  $("delivery-mode").textContent = deliveryEnabled ? "Delivery enabled" : "Delivery disabled";
+  if (selected !== null) return openCase(selected);
+}).catch(showError);
 loadQueue().catch(showError);
 
 

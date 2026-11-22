@@ -1,3 +1,4 @@
+from collections import deque
 import importlib
 from unittest.mock import Mock
 
@@ -8,6 +9,7 @@ from fastapi.testclient import TestClient
 @pytest.fixture
 def dashboard(monkeypatch):
     main = importlib.import_module("app.main")
+    monkeypatch.setattr(main, "failed_logins", deque())
     monkeypatch.setattr(main.settings, "dashboard_username", "reviewer")
     monkeypatch.setattr(main.settings, "dashboard_password", "test-password")
     return main, TestClient(main.app)
@@ -56,7 +58,8 @@ def test_poll_calls_worker_with_bounded_batch(dashboard, monkeypatch):
 
 
 def test_delivery_requires_authentication_and_explicit_dashboard_request(dashboard, monkeypatch):
-    _, client = dashboard
+    main, client = dashboard
+    monkeypatch.setattr(main.settings, "delivery_enabled", True)
     from app import delivery
 
     send = Mock(return_value={"status": "sent"})
@@ -190,3 +193,46 @@ def test_hosted_callback_does_not_echo_query(dashboard, monkeypatch):
     assert response.headers["Referrer-Policy"] == "no-referrer"
     assert response.headers["Cache-Control"] == "no-store"
     assert "private" not in response.text
+
+
+def test_login_is_temporarily_locked_after_five_failures(dashboard, monkeypatch):
+    main, client = dashboard
+    clock = Mock(return_value=100.0)
+    monkeypatch.setattr(main, "monotonic", clock)
+    for _ in range(8):
+        assert client.get("/").status_code == 401
+    for _ in range(5):
+        assert client.get("/", auth=("reviewer", "wrong")).status_code == 401
+    valid = ("reviewer", "test-password")
+    locked = client.get("/api/status", auth=valid)
+    assert locked.status_code == 429
+    assert locked.headers["Retry-After"] == "60"
+    assert client.get("/health").status_code == 200
+    clock.return_value += 60
+    assert client.get("/", auth=valid).status_code == 200
+
+
+def test_disabled_delivery_is_visible_and_never_invokes_sender(dashboard, monkeypatch):
+    from app import delivery
+
+    main, client = dashboard
+    monkeypatch.setattr(main.settings, "delivery_enabled", False)
+    send = Mock()
+    monkeypatch.setattr(delivery, "send_approved", send)
+    auth = ("reviewer", "test-password")
+    assert "Delivery disabled" in client.get("/", auth=auth).text
+    assert client.get("/api/status").status_code == 401
+    assert client.get("/api/status", auth=auth).json() == {"delivery_enabled": False}
+    response = client.post("/api/queue/42/send", auth=auth, headers={"X-Pingo-Action": "dashboard"})
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Delivery is disabled"}
+    send.assert_not_called()
+
+
+def test_invalid_dashboard_payload_does_not_echo_input(dashboard):
+    _, client = dashboard
+    response = client.post("/api/queue/42/review", auth=("reviewer", "test-password"),
+                           headers={"X-Pingo-Action": "dashboard"},
+                           json={"action": "private accidentally pasted value", "draft": ""})
+    assert response.status_code == 422
+    assert response.json() == {"detail": "Invalid request data"}

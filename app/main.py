@@ -1,12 +1,15 @@
 import logging
 import os
 import secrets
+from collections import deque
 from pathlib import Path
 from threading import Lock
+from time import monotonic
 from typing import Annotated, Literal
 
 import psycopg
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
@@ -22,14 +25,27 @@ static = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=static), name="static")
 basic = HTTPBasic()
 poll_lock = Lock()
+login_lock = Lock()
+failed_logins: deque[float] = deque()
+LOGIN_ATTEMPTS = 5
+LOGIN_WINDOW_SECONDS = 60
 logger = logging.getLogger(__name__)
 
 
 def reviewer(credentials: Annotated[HTTPBasicCredentials, Depends(basic)]) -> str:
-    valid_user = secrets.compare_digest(credentials.username.encode(), settings.dashboard_username.encode())
-    valid_password = secrets.compare_digest(credentials.password.encode(), settings.dashboard_password.encode())
-    if not settings.dashboard_password or not (valid_user and valid_password):
-        raise HTTPException(401, "Authentication required", headers={"WWW-Authenticate": 'Basic realm="Pingo"'})
+    with login_lock:
+        now = monotonic()
+        while failed_logins and failed_logins[0] <= now - LOGIN_WINDOW_SECONDS:
+            failed_logins.popleft()
+        # One reviewer shares this bounded window across clients and request paths.
+        if len(failed_logins) >= LOGIN_ATTEMPTS:
+            raise HTTPException(429, "Too many login attempts. Try again in a minute.",
+                                headers={"Retry-After": str(LOGIN_WINDOW_SECONDS)})
+        valid_user = secrets.compare_digest(credentials.username.encode(), settings.dashboard_username.encode())
+        valid_password = secrets.compare_digest(credentials.password.encode(), settings.dashboard_password.encode())
+        if not settings.dashboard_password or not (valid_user and valid_password):
+            failed_logins.append(now)
+            raise HTTPException(401, "Authentication required", headers={"WWW-Authenticate": 'Basic realm="Pingo"'})
     return credentials.username
 
 
@@ -53,6 +69,12 @@ async def response_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'; base-uri 'none'"
     return response
+
+
+@app.exception_handler(RequestValidationError)
+def invalid_request(_request: Request, _exc: RequestValidationError) -> JSONResponse:
+    # FastAPI's default validation response includes submitted input values.
+    return JSONResponse({"detail": "Invalid request data"}, status_code=422)
 
 
 @app.exception_handler(psycopg.Error)
@@ -80,6 +102,11 @@ def gmail_oauth_callback() -> PlainTextResponse:
 @app.get("/")
 def dashboard(_: Reviewer) -> FileResponse:
     return FileResponse(static / "index.html")
+
+
+@app.get("/api/status")
+def status(_: Reviewer) -> dict:
+    return {"delivery_enabled": settings.delivery_enabled}
 
 
 @app.get("/api/queue")
@@ -136,12 +163,14 @@ def poll(_: Reviewer) -> dict:
 
 @app.post("/api/queue/{event_id}/send", dependencies=[Depends(require_dashboard_request)])
 def send(event_id: int, username: Reviewer) -> dict:
+    if not settings.delivery_enabled:
+        raise HTTPException(409, "Delivery is disabled")
     from app.delivery import send_approved
 
     try:
         return send_approved(event_id, username)
-    except ValueError as exc:
-        raise HTTPException(409, str(exc)) from None
+    except ValueError:
+        raise HTTPException(409, "Approved draft unavailable for delivery. Check the review and delivery status.") from None
     except Exception as exc:
         logger.error("Delivery failed (%s)", type(exc).__name__)
         raise HTTPException(503, "Delivery could not be confirmed. Review Gmail before another attempt.") from None
