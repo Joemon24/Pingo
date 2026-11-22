@@ -48,3 +48,8 @@ client_secret*.json
 # Frontend (React)
 node_modules/
 dashboard/dist/
+
+# Raw evaluations, drafts, judge outputs, and private human labels
+evals/results/
+evals/human_labels.completed*.json
+# A manually reviewed final baseline summary may be committed separately.
