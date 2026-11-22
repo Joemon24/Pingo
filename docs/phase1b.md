@@ -80,3 +80,9 @@ Fill a copy of natural/human_labels.template.json at natural/human_labels.comple
     uv run --no-sync python -m evals.calibrate --live --judge-model "$PINGO_JUDGE_MODEL" --dataset evals/groundedness_seeds.json --human-labels evals/results/seeded-labels.json --dataset evals/results/natural/dataset.json --human-labels evals/results/natural/human_labels.completed.json --output evals/results/combined-calibration.json
 
 A calibration with complete model success prints Judge failures: 0, Failure types: {}, then measured JSON. Values depend on the actual run. Output reports and sample directories must be new, to preserve earlier evidence.
+
+## Resume after a rate limit
+
+Calibration retries a rate-limited case once using the provider's retry-after value, with a one-second minimum. When the provider gives no delay, calibration waits 60 seconds. A second rate-limit error, a requested delay above 90 seconds, or an explicit quota error defers the remaining calls and saves the partial report. The summary lists deferred cases separately from attempted failures. Pending claims still count in the full-set denominators.
+
+Run the same calibration or extraction command with `--resume PATH_TO_PARTIAL_REPORT` and a fresh `--output` path. The mode, model, prompt versions and hashes, dataset hashes, and label hashes must match. A resumed report combines validated successes from the earlier run with new results and records the earlier report's hash. If another run is deferred, resume from the newest report to retain the accumulated successes.

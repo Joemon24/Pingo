@@ -257,3 +257,72 @@ def test_smoke_cannot_accidentally_start_calibration(monkeypatch):
     with pytest.raises(SystemExit):
         main(["--live", "--judge-model", "groq:fixture", "--smoke", "--extraction"])
     check.assert_not_called()
+
+
+def test_rate_limit_retries_once_then_defers_other_calls(monkeypatch):
+    from pydantic_ai.exceptions import ModelRateLimitError
+
+    pause = Mock()
+    monkeypatch.setattr("evals.calibrate.sleep", pause)
+    grader = Mock()
+    grader.run_sync.side_effect = ModelRateLimitError("fixture", "rate limited", retry_after=2)
+    dataset = {"cases": [CASE, {**CASE, "id": "later"}]}
+    report = run_calibration(
+        [(dataset, {"fixture/c1": "supported", "later/c1": "unsupported"})],
+        Mock(), grader, False,
+    )
+    pause.assert_called_once_with(2)
+    assert grader.run_sync.call_count == 2
+    assert report["judge_failure_count"] == 1
+    assert report["deferred_cases"] == ["seeded/later"]
+    assert report["metrics"]["combined"]["failures_as_misses"]["false_negative"] == 1
+
+
+def test_rate_limit_recovery_keeps_extraction_result(monkeypatch):
+    from pydantic_ai.exceptions import ModelRateLimitError
+
+    pause = Mock()
+    monkeypatch.setattr("evals.calibrate.sleep", pause)
+    extractor = Mock()
+    extractor.run_sync.side_effect = [
+        ModelRateLimitError("fixture", "rate limited"), SimpleNamespace(output=INVENTORY),
+    ]
+    report = run_calibration(
+        [({"cases": [CASE]}, {"fixture/c1": "supported"})], extractor, Mock(), True,
+    )
+    pause.assert_called_once_with(60)
+    assert report["failures"] == []
+    assert report["extraction"]["seeded/supported"]["covered"] == 1
+
+
+@pytest.mark.parametrize("extraction", [False, True])
+def test_resume_keeps_successes_and_only_runs_missing_cases(extraction):
+    from evals.calibrate import reused_results
+
+    inputs = [({"cases": [CASE, {**CASE, "id": "later"}]},
+               {"fixture/c1": "supported", "later/c1": "supported"})]
+    mode = "extraction" if extraction else "fixed_inventory_grading"
+    field, cached = ("inventory", INVENTORY) if extraction else ("grade", GRADE)
+    report = {
+        "mode": mode, "judge_model": "groq:fixture",
+        "failures": [{"case_id": "seeded/later"}],
+        "results": [{"case_id": "seeded/fixture", field: cached.model_dump()},
+                    {"case_id": "seeded/later"}],
+    }
+    resumed = reused_results(report, {"mode": mode, "judge_model": "groq:fixture"}, inputs)
+    extractor, grader = Mock(), Mock()
+    extractor.run_sync.return_value.output = INVENTORY
+    grader.run_sync.return_value = SimpleNamespace(
+        output=GRADE, usage=SimpleNamespace(input_tokens=10, output_tokens=5),
+    )
+    result = run_calibration(inputs, extractor, grader, extraction, previous_results=resumed)
+    assert result["reused_case_count"] == 1
+    assert result["failures"] == []
+    assert extractor.run_sync.call_count == int(extraction)
+    assert grader.run_sync.call_count == int(not extraction)
+    if extraction:
+        assert result["extraction"]["seeded/supported"]["covered"] == 2
+    else:
+        assert result["metrics"]["combined"]["excluding_failures"]["agreement"]["numerator"] == 2
+    with pytest.raises(ValueError, match="different judge_model"):
+        reused_results(report, {"mode": mode, "judge_model": "groq:other"}, inputs)
