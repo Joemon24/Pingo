@@ -26,7 +26,7 @@ def get_case(event_id: int) -> dict | None:
             """
             select e.id, e.status, e.attempts, e.error, t.subject, m.body,
                    e.result->>'action' as action, e.result->>'reason' as reason,
-                   e.result->'stages' as stages, e.result->'sources' as sources, e.result->>'trace_id' as trace_id,
+                   e.result->>'prompt_version' as prompt_version, e.result->'stages' as stages, e.result->'sources' as sources, e.result->>'trace_id' as trace_id,
                    d.status as delivery_status,
                    coalesce(r.draft, e.result->>'reply') as draft,
                    r.action as review, r.reviewer, r.reviewed_at

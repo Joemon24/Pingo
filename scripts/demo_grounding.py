@@ -18,8 +18,8 @@ def capture(subject: str) -> dict:
     from app.pipeline import handle_message
     from app.telemetry import evaluation_capture
 
-    if not settings.dry_run or settings.delivery_enabled or PROMPT_VERSION != "pingo-v2-citations":
-        raise ValueError("Capture requires DRY_RUN=true, DELIVERY_ENABLED=false, and pingo-v2-citations")
+    if not settings.dry_run or settings.delivery_enabled:
+        raise ValueError("Capture requires DRY_RUN=true, DELIVERY_ENABLED=false,")
     if not re.fullmatch(r"Pingo M0 [A-Za-z0-9 -]{1,80}", subject):
         raise ValueError("Use a unique synthetic subject beginning 'Pingo M0 '")
     gmail = Gmail()
@@ -56,8 +56,8 @@ def capture(subject: str) -> dict:
 def label_form(report_path: Path, output: Path, model: str) -> int:
     raw = report_path.read_bytes()
     report = json.loads(raw)
-    if report.get("prompt_version") != "pingo-v2-citations":
-        raise ValueError("Use a pingo-v2-citations capture")
+    if report.get("prompt_version") not in {"pingo-v2-citations", "pingo-v3-verbatim-citations"}:
+        raise ValueError("Use a versioned citation-prompt capture")
     if output.exists() or output.with_suffix(".validation-failures.json").exists():
         raise ValueError("Choose a new directory for the blank form and its validation artifact")
     evidence = report["generation_evidence"]

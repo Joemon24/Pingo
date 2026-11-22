@@ -1,0 +1,47 @@
+{
+  "draft": {
+    "action": "reply",
+    "reply": "Please ensure the case and earbuds are charged. Make sure Bluetooth is enabled on your phone, then remove the earbuds from the phone's previously paired devices list and try pairing again. Let us know your phone model and operating system so we can provide further assistance.",
+    "reasoning": "The customer reports NG-BUDS2 earbuds not connecting. The knowledge base provides basic pairing steps and requests for device details, which can be shared without escalating.",
+    "enough_information": true,
+    "promises_an_action": false,
+    "issue": {
+      "product": "wireless-earbuds",
+      "problem": "pairing-failure",
+      "order_number": null,
+      "model_number": "NG-BUDS2",
+      "troubleshooting_attempted": false,
+      "safety_concern": false
+    },
+    "sources": [
+      {
+        "claim": "Please ensure the case and earbuds are charged.",
+        "article_id": 26,
+        "snippet": "ask the customer to charge the case and earbuds"
+      },
+      {
+        "claim": "Make sure Bluetooth is enabled on your phone.",
+        "article_id": 26,
+        "snippet": "confirm Bluetooth is enabled on the phone"
+      },
+      {
+        "claim": "Remove the earbuds from the phone's previously paired devices list before trying to pair again.",
+        "article_id": 26,
+        "snippet": "remove the earbuds from the phone's previously paired devices list before retrying pairing"
+      },
+      {
+        "claim": "Let us know your phone model and operating system so we can provide further assistance.",
+        "article_id": 26,
+        "snippet": "Ask which phone model and operating system they use"
+      }
+    ]
+  },
+  "articles": [
+    {
+      "section": "troubleshooting",
+      "id": 26,
+      "title": "Earbuds Not Pairing",
+      "content": "For NG-BUDS2, ask the customer to charge the case and earbuds, confirm Bluetooth is enabled on the phone, and remove the earbuds from the phone's previously paired devices list before retrying pairing. Ask which phone model and operating system they use. Do not invent an exact reset button sequence; if basic pairing fails, escalate for model-specific assistance."
+    }
+  ]
+}

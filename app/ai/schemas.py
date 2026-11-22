@@ -2,7 +2,7 @@
 from typing import Literal
 from pydantic import BaseModel, Field
 
-PROMPT_VERSION = "pingo-v2-citations"
+PROMPT_VERSION = "pingo-v3-verbatim-citations"
 
 Section = Literal[
     "products",

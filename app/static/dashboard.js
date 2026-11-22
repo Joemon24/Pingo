@@ -69,7 +69,7 @@ async function openCase(id) {
   $("body").textContent = entry.body || "Message body unavailable.";
   $("case-content").hidden = false;
   $("draft-content").hidden = entry.action !== "reply";
-  $("trace").textContent = JSON.stringify({trace_id: entry.trace_id, stages: entry.stages, sources: entry.sources, delivery: entry.delivery_status}, null, 2);
+  $("trace").textContent = JSON.stringify({prompt_version: entry.prompt_version || "unrecorded", trace_id: entry.trace_id, stages: entry.stages, sources: entry.sources, delivery: entry.delivery_status}, null, 2);
   $("send").hidden = !deliveryEnabled || entry.review !== "approve" || Boolean(entry.delivery_status);
   $("draft").value = entry.draft || "";
   $("draft").readOnly = Boolean(entry.review);
