@@ -54,7 +54,9 @@ def extract_candidates(report: dict, extractor) -> tuple[list[dict], list[dict]]
     return candidates, failures
 
 
-def write_sample(selected: list[dict], directory: Path, source_hash: str, seed: int, failures: list[dict]) -> None:
+def write_sample(
+    selected: list[dict], directory: Path, source_hash: str, seed: int | None, failures: list[dict],
+) -> None:
     directory.mkdir(parents=True, exist_ok=False)
     cases = {}
     for row in selected:
@@ -64,11 +66,13 @@ def write_sample(selected: list[dict], directory: Path, source_hash: str, seed: 
         })
         case["claims"].append({"id": row["claim_id"], "text": row["text"]})
     dataset = {"stratum": "natural", "source_sha256": source_hash, "sampling_seed": seed,
-               "sampling_rule": "Even category allocation without replacement; redistribute exhausted strata.",
+               "sampling_rule": ("All claims extracted from one synthetic draft." if seed is None else
+                                 "Even category allocation without replacement; redistribute exhausted strata."),
                "extraction_failures": failures, "cases": list(cases.values())}
     raw = (json.dumps(dataset, indent=2) + "\n").encode()
     (directory / "dataset.json").write_bytes(raw)
-    form = {"dataset_sha256": sha256(raw).hexdigest(), "claims": [
+    form = {"dataset_sha256": sha256(raw).hexdigest(),
+            "instruction": "Use human_evidence.json. Label before viewing judge output.", "claims": [
         {"id": case["id"] + "/" + claim["id"], "text": claim["text"], "label": None}
         for case in cases.values() for claim in case["claims"]
     ]}
