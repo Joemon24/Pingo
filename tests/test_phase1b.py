@@ -295,6 +295,46 @@ def test_rate_limit_recovery_keeps_extraction_result(monkeypatch):
     assert report["extraction"]["seeded/supported"]["covered"] == 1
 
 
+def test_pacing_skips_cached_cases_and_spaces_new_calls_and_retries(monkeypatch):
+    from unittest.mock import call
+    from pydantic_ai.exceptions import ModelRateLimitError
+
+    pause = Mock()
+    monkeypatch.setattr("evals.calibrate.sleep", pause)
+    extractor = Mock()
+    output = SimpleNamespace(output=INVENTORY)
+    extractor.run_sync.side_effect = [
+        output, ModelRateLimitError("fixture", "rate limited", retry_after=1), output,
+    ]
+    dataset = {"cases": [CASE, {**CASE, "id": "second"}, {**CASE, "id": "third"}]}
+    labels = {f"{case['id']}/c1": "supported" for case in dataset["cases"]}
+    report = run_calibration(
+        [(dataset, labels)], extractor, Mock(), True,
+        previous_results={"seeded/fixture": {"case_id": "seeded/fixture", "inventory": INVENTORY.model_dump()}},
+        interval_seconds=25,
+    )
+    assert extractor.run_sync.call_count == 3
+    assert pause.call_args_list == [call(25), call(25)]
+    assert report["extraction"]["seeded/supported"]["covered"] == 3
+
+
+def test_calibration_reports_invalid_judge_evidence_with_fixed_reason(capsys):
+    grader = Mock()
+    invalid = GRADE.model_copy(deep=True)
+    invalid.judgments[0].evidence[0].quote = "Provider output that must stay out of the error"
+    grader.run_sync.return_value.output = invalid
+    report = run_calibration(
+        [({"cases": [CASE]}, {"fixture/c1": "supported"})], Mock(), grader, False,
+    )
+    assert report["failures"] == [{
+        "case_id": "seeded/fixture", "stage": "grading",
+        "error_type": "JudgeOutputError", "validation_issue": "Judge cited an unavailable quote",
+    }]
+    error_output = capsys.readouterr().err
+    assert "seeded/fixture: Judge cited an unavailable quote" in error_output
+    assert invalid.judgments[0].evidence[0].quote not in error_output
+
+
 @pytest.mark.parametrize("extraction", [False, True])
 def test_resume_keeps_successes_and_only_runs_missing_cases(extraction):
     from evals.calibrate import reused_results

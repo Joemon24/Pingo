@@ -57,26 +57,30 @@ class Grade(BaseModel):
     judgments: list[Judgment]
 
 
+class JudgeOutputError(ValueError):
+    """A validation failure with a fixed message safe to store in reports."""
+
+
 def validate_inventory(draft: str, inventory: Inventory) -> None:
     ids = [claim.id for claim in inventory.claims]
     if len(ids) != len(set(ids)):
-        raise ValueError("Duplicate extracted claim IDs")
+        raise JudgeOutputError("Duplicate extracted claim IDs")
     for claim in inventory.claims:
         if claim.text not in draft:
-            raise ValueError("Extracted claim is not an exact draft span")
+            raise JudgeOutputError("Extracted claim is not an exact draft span")
 
 
 def validate_grade(inventory: Inventory, grade: Grade, articles: list[dict]) -> None:
     ids = [entry.claim_id for entry in grade.judgments]
     if len(ids) != len(set(ids)) or set(ids) != {claim.id for claim in inventory.claims}:
-        raise ValueError("Judge omitted, duplicated, or added inventory claims")
+        raise JudgeOutputError("Judge omitted, duplicated, or added inventory claims")
     contents = {article["id"]: article["content"] for article in articles}
     for judgment in grade.judgments:
         if judgment.label != "unsupported" and not judgment.evidence:
-            raise ValueError("Supported/contradicted labels require evidence")
+            raise JudgeOutputError("Supported/contradicted labels require evidence")
         for evidence in judgment.evidence:
             if evidence.article_id not in contents or evidence.quote not in contents[evidence.article_id]:
-                raise ValueError("Judge cited an unavailable quote")
+                raise JudgeOutputError("Judge cited an unavailable quote")
 
 
 def make_agents(model):

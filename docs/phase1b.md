@@ -86,3 +86,7 @@ A calibration with complete model success prints Judge failures: 0, Failure type
 Calibration retries a rate-limited case once using the provider's retry-after value, with a one-second minimum. When the provider gives no delay, calibration waits 60 seconds. A second rate-limit error, a requested delay above 90 seconds, or an explicit quota error defers the remaining calls and saves the partial report. The summary lists deferred cases separately from attempted failures. Pending claims still count in the full-set denominators.
 
 Run the same calibration or extraction command with `--resume PATH_TO_PARTIAL_REPORT` and a fresh `--output` path. The mode, model, prompt versions and hashes, dataset hashes, and label hashes must match. A resumed report combines validated successes from the earlier run with new results and records the earlier report's hash. If another run is deferred, resume from the newest report to retain the accumulated successes.
+
+Use `--interval-seconds 25` when calls are repeatedly throttled. This waits between newly attempted cases and applies the same minimum delay to retries. Cached successes require no model call or additional wait. The delay is recorded in the output and can be changed between resumes. Rates are account and workload dependent.
+
+Validation failures from the quote and claim checks include a fixed `validation_issue` message in the report and the terminal. This lets you distinguish mismatched claim IDs, missing evidence, and quotes absent from the articles without saving rejected model content in the error log.

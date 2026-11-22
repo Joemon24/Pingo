@@ -4,6 +4,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
+from math import isfinite
 from pathlib import Path
 import sys
 from time import sleep
@@ -11,20 +12,21 @@ from time import sleep
 from pydantic_ai.exceptions import ModelQuotaExceededError, ModelRateLimitError
 
 from evals.groundedness import (
-    GRADING_PROMPT, EXTRACTION_PROMPT, JUDGE_VERSION, Grade, Inventory, make_agents,
+    GRADING_PROMPT, EXTRACTION_PROMPT, JUDGE_VERSION, Grade, Inventory, JudgeOutputError, make_agents,
     validate_grade, validate_inventory, specificity_flags, build_grader_input,
     check_model, smoke_agents,
 )
 from evals.measurement import load_labels, claim_covered, summarize, rate
 
 
-def retry_rate_limit(call, case_id: str):
+def retry_rate_limit(call, case_id: str, interval_seconds: float):
     try:
         return call()
     except ModelRateLimitError as exc:
         if exc.retry_after is not None and exc.retry_after > 90:
             raise
-        delay = max(1, exc.retry_after) if exc.retry_after is not None else 60
+        provider_delay = exc.retry_after if exc.retry_after is not None else 60
+        delay = max(1, provider_delay, interval_seconds)
         print(f"{case_id}: rate limited; retrying once in {delay:g}s", file=sys.stderr, flush=True)
         sleep(delay)
         return call()
@@ -78,12 +80,13 @@ def reused_results(previous: dict, identity: dict, inputs: list[tuple[dict, dict
 
 def run_calibration(
     inputs: list[tuple[dict, dict]], extractor, grader, extraction: bool,
-    *, previous_results: dict | None = None,
+    *, previous_results: dict | None = None, interval_seconds: float = 0,
 ) -> dict:
     results, failures, rows = [], [], []
     extraction_counts: dict[str, dict] = {}
     previous_results = previous_results or {}
     rate_limit_blocked = False
+    model_call_attempted = False
     deferred_cases = []
     for dataset, human in inputs:
         stratum = dataset.get("stratum", "seeded")
@@ -106,12 +109,18 @@ def run_calibration(
                 count["deferred_drafts"] += int(deferred)
             if not deferred:
                 try:
+                    if key not in previous_results:
+                        if model_call_attempted and interval_seconds:
+                            sleep(interval_seconds)
+                        model_call_attempted = True
                     if extraction:
                         if key in previous_results:
                             inventory = Inventory.model_validate(result["inventory"])
                         else:
                             payload = json.dumps({"draft": case["draft"]})
-                            inventory = retry_rate_limit(lambda: extractor.run_sync(payload), key).output
+                            inventory = retry_rate_limit(
+                                lambda: extractor.run_sync(payload), key, interval_seconds,
+                            ).output
                             validate_inventory(case["draft"], inventory)
                             result["inventory"] = inventory.model_dump()
                         count["covered"] += sum(
@@ -122,7 +131,7 @@ def run_calibration(
                         if key in previous_results:
                             grade = Grade.model_validate(result["grade"])
                         else:
-                            run = retry_rate_limit(lambda: calibrate_case(case, grader), key)
+                            run = retry_rate_limit(lambda: calibrate_case(case, grader), key, interval_seconds)
                             grade = run.output
                             result["grade"] = grade.model_dump()
                             result["usage"] = {
@@ -132,10 +141,14 @@ def run_calibration(
                 except Exception as exc:
                     if extraction:
                         count["failed_drafts"] += 1
-                    failures.append({
+                    failure = {
                         "case_id": key, "stage": "extraction" if extraction else "grading",
                         "error_type": type(exc).__name__,
-                    })
+                    }
+                    if isinstance(exc, JudgeOutputError):
+                        failure["validation_issue"] = str(exc)
+                        print(f"{key}: {exc}", file=sys.stderr, flush=True)
+                    failures.append(failure)
                     if isinstance(exc, (ModelRateLimitError, ModelQuotaExceededError)):
                         rate_limit_blocked = True
                         print(f"{key}: {type(exc).__name__}; deferring remaining model calls",
@@ -170,13 +183,17 @@ def main(argv=None) -> None:
     parser.add_argument("--human-labels", type=Path, action="append")
     parser.add_argument("--output", type=Path, default=Path("evals/results/judge-calibration.json"))
     parser.add_argument("--resume", type=Path, help="Reuse successful cases from a matching calibration report")
+    parser.add_argument("--interval-seconds", type=float, default=0,
+                        help="Wait between new model cases and use this as a minimum retry delay")
     parser.add_argument("--extraction", action="store_true")
     parser.add_argument("--smoke", action="store_true", help="Only one tiny live request per agent; no calibration")
     args = parser.parse_args(argv)
     if not args.live or not args.judge_model.startswith("groq:"):
         parser.error("Use --live and an explicit groq:<model ID>")
+    if not isfinite(args.interval_seconds) or not 0 <= args.interval_seconds <= 90:
+        parser.error("--interval-seconds must be between 0 and 90")
     if args.smoke:
-        if args.extraction or args.dataset or args.human_labels or args.resume:
+        if args.extraction or args.dataset or args.human_labels or args.resume or args.interval_seconds:
             parser.error("--smoke is a standalone diagnostic")
         check_model(args.judge_model)
         if not smoke_agents(*make_agents(args.judge_model)):
@@ -215,10 +232,14 @@ def main(argv=None) -> None:
             parser.error(str(exc))
     check_model(args.judge_model)
     extractor, grader = make_agents(args.judge_model)
-    report = run_calibration(inputs, extractor, grader, args.extraction, previous_results=previous_results)
+    report = run_calibration(
+        inputs, extractor, grader, args.extraction,
+        previous_results=previous_results, interval_seconds=args.interval_seconds,
+    )
     report.update(
         **identity, created_at=datetime.now(timezone.utc).isoformat(),
         resumed_from_sha256=resume_hash,
+        interval_seconds=args.interval_seconds,
         interval_caveat="Wilson intervals treat claims as independent. Claims within drafts are correlated; intervals are descriptive.",
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
