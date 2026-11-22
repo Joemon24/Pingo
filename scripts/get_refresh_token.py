@@ -3,6 +3,7 @@ import argparse
 from getpass import getpass
 from pathlib import Path
 import os
+import sys
 from secrets import compare_digest
 from urllib.parse import parse_qs, urlsplit
 import webbrowser
@@ -47,6 +48,8 @@ def main() -> None:
     }
     try:
         if args.hosted:
+            if not sys.stdin.isatty() or not sys.stderr.isatty():
+                parser.error("Run hosted authorization from an interactive terminal")
             redirect = os.getenv("GOOGLE_REDIRECT_URI") or values.get("GOOGLE_REDIRECT_URI", "")
             url = urlsplit(redirect or "")
             if (url.scheme != "https" or not url.hostname or url.username or url.password
@@ -73,7 +76,7 @@ def main() -> None:
         parser.error("Google did not return a refresh token. Authorization was not saved.")
     env_path.touch(mode=0o600, exist_ok=True)
     os.chmod(env_path, 0o600)
-    set_key(str(env_path), "GOOGLE_REFRESH_TOKEN", creds.refresh_token)
+    set_key(str(env_path), "GOOGLE_REFRESH_TOKEN", creds.refresh_token, quote_mode="never")
     os.chmod(env_path, 0o600)
     print("Gmail authorization saved to the project .env. Update the host secret or restart Pingo.")
 

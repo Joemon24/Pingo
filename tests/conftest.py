@@ -13,4 +13,7 @@ def support_settings(monkeypatch):
     monkeypatch.setenv("DELIVERY_ENABLED", "false")
     monkeypatch.setenv("PYDANTIC_AI_NO_BANNER", "1")
     if os.getenv("PINGO_LIVE_GROQ") != "1":
+        # Mocked HTTP clients must be constructible even on hosts with a SOCKS proxy.
+        monkeypatch.setenv("NO_PROXY", "*")
+        monkeypatch.setenv("no_proxy", "*")
         monkeypatch.setenv("GROQ_API_KEY", "test")

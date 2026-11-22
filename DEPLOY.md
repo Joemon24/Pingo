@@ -43,7 +43,18 @@ PINGO_LIVE_GROQ=0 uv run --no-sync --with pytest python -m pytest -q
 ```
 
 Expected output is `Upserted … knowledge entries` and a passing pytest summary
-with one opt-in live test skipped.
+with one opt-in live test skipped. For a Docker check on your machine, start Docker
+Desktop and run:
+
+```sh
+docker build -t pingo:m1 .
+docker run --rm --env-file .env -e PORT=8000 -e DELIVERY_ENABLED=false -p 127.0.0.1:8000:8000 pingo:m1
+```
+
+Docker's env-file format uses plain `KEY=value` lines. Remove shell quoting around
+older generated token values in the private env file before passing it to Docker.
+In a second terminal, run the health and readiness checks in step 3 with
+`BASE_URL=http://127.0.0.1:8000`.
 
 ## 2. Configure Google and Render
 
