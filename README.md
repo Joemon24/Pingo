@@ -31,12 +31,7 @@ PINGO_LIVE_GROQ=1 uv run --with pytest python -m pytest -q -s tests/test_live_gr
 
 Set a unique `DASHBOARD_PASSWORD`, open `http://localhost:8000`, and sign in with `DASHBOARD_USERNAME` (default `admin`). Use the case queue to read inbound messages, edit drafts, and record approvals or rejections. A review is final for that draft. When delivery is explicitly enabled, the send action uses the exact stored approved text. **Check Gmail** checks one unprocessed inbox message on demand. Use a dedicated test inbox. Pingo can write database records and apply Gmail labels.
 
-1. Use a development Supabase database. Apply the pending SQL migrations in timestamp order and seed the Markdown knowledge base locally. For IPv4-only hosts use the Supabase session pooler URL and TLS.
-2. Import this repository as a Render Blueprint using `render.yaml`. Supply the test Gmail OAuth settings, Supabase connection URL, and Groq key in Render's environment settings. Retrieve the generated dashboard password there.
-3. Open the deployed HTTPS URL, confirm `/health` responds, and sign in. Use **Check Gmail** with a synthetic Bluetooth email, then verify the resulting draft, review history, and dry-run Gmail labels.
-
-The free Render service can sleep during inactivity. Use the dashboard's on-demand check for the hosted demo. For continuous polling in a test environment run the existing poller as a separate process.
-
+See [DEPLOY.md](DEPLOY.md) for the Docker Render blueprint, Gmail OAuth, and the hosted smoke checklist.
 
 ## Approved delivery
 
@@ -58,13 +53,13 @@ Draft execution history records stage timing, token usage, and retrieved article
 
 `docker build -t pingo .` builds the web service. Run with `docker run --rm --env-file .env -p 8000:8000 pingo`. CI runs mocked tests and the Docker build. Neither Docker nor CI has been verified in the current restricted development environment.
 
-`/health` checks the running API. Authenticated `/ready` checks required database columns and knowledge section count.
+`/health` checks the running API. Authenticated `/ready` checks required database columns required demo configuration, and knowledge section count.
 
 Knowledge edits made through the dashboard have an audit record and reject stale edits. Markdown reseeding overwrites matching article contents, so export dashboard edits into Markdown before reseeding.
 
 ## Current verification limits
 
-The audit and automated tests use installed dependencies from the Desktop environment because dependency downloads are blocked here. The workspace environment still needs a successful `uv sync --locked`. Supabase migrations, Gmail access, live Groq behavior, browser interactions, Docker build, CI execution, and public deployment require verification. The workspace is the current implementation; the Desktop source checkout is older.
+The runtime installed from the lockfile in an isolated local environment. See the test summary and hosted smoke checklist for verification of external integrations.
 
 ## Citation integrity
 
