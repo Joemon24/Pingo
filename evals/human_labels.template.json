@@ -1,0 +1,231 @@
+{
+  "dataset_sha256": "c41aa8e7496788038710d9a94868c8e6b551b33b7115977721dfb497b044dde6",
+  "instruction": "Use human_evidence.json. Label before viewing seed labels or judge output.",
+  "claims": [
+    {
+      "id": "case-01/c1",
+      "text": "The NG-C65 has a maximum advertised output of 65 W with a compatible USB-C PD device and appropriately rated cable.",
+      "label": null
+    },
+    {
+      "id": "case-01/c2",
+      "text": "A USB-C cable is not included with the NG-C65.",
+      "label": null
+    },
+    {
+      "id": "case-01/c3",
+      "text": "Actual charging speed depends on the device and cable.",
+      "label": null
+    },
+    {
+      "id": "case-02/c1",
+      "text": "The NG-C65 has a maximum output of 100 W.",
+      "label": null
+    },
+    {
+      "id": "case-02/c2",
+      "text": "A USB-C cable is not included with the NG-C65.",
+      "label": null
+    },
+    {
+      "id": "case-02/c3",
+      "text": "Actual charging speed depends on the device and cable.",
+      "label": null
+    },
+    {
+      "id": "case-03/c1",
+      "text": "The NG-C65 has a maximum output of 100 W.",
+      "label": null
+    },
+    {
+      "id": "case-03/c2",
+      "text": "A USB-C cable is not included with the NG-C65.",
+      "label": null
+    },
+    {
+      "id": "case-03/c3",
+      "text": "Actual charging speed depends on the device and cable.",
+      "label": null
+    },
+    {
+      "id": "case-04/c1",
+      "text": "Charge the NG-BUDS2 case and earbuds.",
+      "label": null
+    },
+    {
+      "id": "case-04/c2",
+      "text": "Confirm Bluetooth is enabled on your phone.",
+      "label": null
+    },
+    {
+      "id": "case-04/c3",
+      "text": "Remove the earbuds from the phone's previously paired devices list before retrying pairing.",
+      "label": null
+    },
+    {
+      "id": "case-05/c1",
+      "text": "Opening the NG-BUDS2 case makes its LED flash blue.",
+      "label": null
+    },
+    {
+      "id": "case-05/c2",
+      "text": "Confirm Bluetooth is enabled on your phone.",
+      "label": null
+    },
+    {
+      "id": "case-05/c3",
+      "text": "Remove the earbuds from the phone's previously paired devices list before retrying pairing.",
+      "label": null
+    },
+    {
+      "id": "case-06/c1",
+      "text": "Opening the NG-BUDS2 case makes its LED flash blue.",
+      "label": null
+    },
+    {
+      "id": "case-06/c2",
+      "text": "Confirm Bluetooth is enabled on your phone.",
+      "label": null
+    },
+    {
+      "id": "case-06/c3",
+      "text": "Remove the earbuds from the phone's previously paired devices list before retrying pairing.",
+      "label": null
+    },
+    {
+      "id": "case-07/c1",
+      "text": "Customers may request a return within 30 calendar days after confirmed delivery.",
+      "label": null
+    },
+    {
+      "id": "case-07/c2",
+      "text": "Eligibility depends on item condition, sales channel, and applicable law.",
+      "label": null
+    },
+    {
+      "id": "case-07/c3",
+      "text": "Refund requests require a human colleague.",
+      "label": null
+    },
+    {
+      "id": "case-08/c1",
+      "text": "Customers may request a return within 90 calendar days after confirmed delivery.",
+      "label": null
+    },
+    {
+      "id": "case-08/c2",
+      "text": "Eligibility depends on item condition, sales channel, and applicable law.",
+      "label": null
+    },
+    {
+      "id": "case-08/c3",
+      "text": "Refund requests require a human colleague.",
+      "label": null
+    },
+    {
+      "id": "case-09/c1",
+      "text": "Customers may request a return within 90 calendar days after confirmed delivery.",
+      "label": null
+    },
+    {
+      "id": "case-09/c2",
+      "text": "Eligibility depends on item condition, sales channel, and applicable law.",
+      "label": null
+    },
+    {
+      "id": "case-09/c3",
+      "text": "Refund requests require a human colleague.",
+      "label": null
+    },
+    {
+      "id": "case-10/c1",
+      "text": "The illustrative delivery estimate is 3\u20137 business days after dispatch within supported domestic areas.",
+      "label": null
+    },
+    {
+      "id": "case-10/c2",
+      "text": "The estimate is not a guarantee.",
+      "label": null
+    },
+    {
+      "id": "case-10/c3",
+      "text": "Pingo does not have live order or carrier access by default.",
+      "label": null
+    },
+    {
+      "id": "case-11/c1",
+      "text": "Pingo has live carrier access by default.",
+      "label": null
+    },
+    {
+      "id": "case-11/c2",
+      "text": "The estimate is not a guarantee.",
+      "label": null
+    },
+    {
+      "id": "case-11/c3",
+      "text": "Pingo does not have live order or carrier access by default.",
+      "label": null
+    },
+    {
+      "id": "case-12/c1",
+      "text": "Pingo has live carrier access by default.",
+      "label": null
+    },
+    {
+      "id": "case-12/c2",
+      "text": "The estimate is not a guarantee.",
+      "label": null
+    },
+    {
+      "id": "case-12/c3",
+      "text": "Pingo does not have live order or carrier access by default.",
+      "label": null
+    },
+    {
+      "id": "case-13/c1",
+      "text": "The fictional products carry a limited 12-month warranty from verified delivery against manufacturing defects, subject to applicable consumer law.",
+      "label": null
+    },
+    {
+      "id": "case-13/c2",
+      "text": "A colleague evaluates warranty eligibility.",
+      "label": null
+    },
+    {
+      "id": "case-13/c3",
+      "text": "The automated agent cannot guarantee a replacement.",
+      "label": null
+    },
+    {
+      "id": "case-14/c1",
+      "text": "The fictional products carry a 24-month warranty from verified delivery against manufacturing defects.",
+      "label": null
+    },
+    {
+      "id": "case-14/c2",
+      "text": "A colleague evaluates warranty eligibility.",
+      "label": null
+    },
+    {
+      "id": "case-14/c3",
+      "text": "The automated agent cannot guarantee a replacement.",
+      "label": null
+    },
+    {
+      "id": "case-15/c1",
+      "text": "The fictional products carry a 24-month warranty from verified delivery against manufacturing defects.",
+      "label": null
+    },
+    {
+      "id": "case-15/c2",
+      "text": "A colleague evaluates warranty eligibility.",
+      "label": null
+    },
+    {
+      "id": "case-15/c3",
+      "text": "The automated agent cannot guarantee a replacement.",
+      "label": null
+    }
+  ]
+}

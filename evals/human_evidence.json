@@ -1,0 +1,472 @@
+{
+  "cases": [
+    {
+      "id": "case-01",
+      "draft": "The NG-C65 has a maximum advertised output of 65 W with a compatible USB-C PD device and appropriately rated cable.\nA USB-C cable is not included with the NG-C65.\nActual charging speed depends on the device and cable.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "products",
+          "title": "NG-C65 65W USB-C Charger",
+          "content": "Gears and Co NG-C65 is a fictional single-port USB-C wall charger. Maximum advertised output is 65 W with a compatible USB-C Power Delivery (PD) device and appropriately rated cable. Input: 100\u2013240 V AC, 50/60 Hz. Box contents: charger and quick-start guide; USB-C cable is not included. Product code: NG-C65. Actual charging speed depends on the connected device and cable; do not guarantee a specific charging time."
+        },
+        {
+          "id": 2,
+          "section": "products",
+          "title": "NG-P20 20,000 mAh Power Bank",
+          "content": "Gears and Co NG-P20 is a fictional rechargeable lithium-ion power bank with a rated cell capacity of 20,000 mAh. It has one USB-C port for input/output and one USB-A output port. Maximum USB-C output: 20 W when supported by the connected device and cable. Box contents: power bank, short USB-C charging cable, and quick-start guide. Product code: NG-P20. Rated cell capacity is not the same as usable output capacity because energy is lost during conversion. Do not promise a specific number of phone charges or airline eligibility."
+        },
+        {
+          "id": 3,
+          "section": "products",
+          "title": "NG-BUDS2 Wireless Earbuds",
+          "content": "Gears and Co NG-BUDS2 are fictional Bluetooth wireless earbuds with a charging case and USB-C charging port. The case and earbuds are not water-resistant unless explicitly stated on the individual product listing. Box contents: two earbuds, charging case, three pairs of silicone ear tips, USB-C cable, and quick-start guide. Product code: NG-BUDS2. Battery life depends on volume, calls, and usage conditions; avoid exact runtime promises unless verified for a particular listing."
+        },
+        {
+          "id": 4,
+          "section": "products",
+          "title": "Product Identification and Compatibility",
+          "content": "Ask for the product code from the packaging, order confirmation, or product label before giving model-specific instructions. USB-C connector shape alone does not establish charging protocol compatibility. Do not claim that a charger, cable, or power bank supports a customer's device unless its requirements are known and compatibility is confirmed from reliable specifications. If unclear, request the device model and escalate to a colleague."
+        }
+      ]
+    },
+    {
+      "id": "case-02",
+      "draft": "The NG-C65 has a maximum output of 100 W.\nA USB-C cable is not included with the NG-C65.\nActual charging speed depends on the device and cable.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "products",
+          "title": "NG-C65 65W USB-C Charger",
+          "content": "Gears and Co NG-C65 is a fictional single-port USB-C wall charger. Maximum advertised output is 65 W with a compatible USB-C Power Delivery (PD) device and appropriately rated cable. Input: 100\u2013240 V AC, 50/60 Hz. Box contents: charger and quick-start guide; USB-C cable is not included. Product code: NG-C65. Actual charging speed depends on the connected device and cable; do not guarantee a specific charging time."
+        },
+        {
+          "id": 2,
+          "section": "products",
+          "title": "NG-P20 20,000 mAh Power Bank",
+          "content": "Gears and Co NG-P20 is a fictional rechargeable lithium-ion power bank with a rated cell capacity of 20,000 mAh. It has one USB-C port for input/output and one USB-A output port. Maximum USB-C output: 20 W when supported by the connected device and cable. Box contents: power bank, short USB-C charging cable, and quick-start guide. Product code: NG-P20. Rated cell capacity is not the same as usable output capacity because energy is lost during conversion. Do not promise a specific number of phone charges or airline eligibility."
+        },
+        {
+          "id": 3,
+          "section": "products",
+          "title": "NG-BUDS2 Wireless Earbuds",
+          "content": "Gears and Co NG-BUDS2 are fictional Bluetooth wireless earbuds with a charging case and USB-C charging port. The case and earbuds are not water-resistant unless explicitly stated on the individual product listing. Box contents: two earbuds, charging case, three pairs of silicone ear tips, USB-C cable, and quick-start guide. Product code: NG-BUDS2. Battery life depends on volume, calls, and usage conditions; avoid exact runtime promises unless verified for a particular listing."
+        },
+        {
+          "id": 4,
+          "section": "products",
+          "title": "Product Identification and Compatibility",
+          "content": "Ask for the product code from the packaging, order confirmation, or product label before giving model-specific instructions. USB-C connector shape alone does not establish charging protocol compatibility. Do not claim that a charger, cable, or power bank supports a customer's device unless its requirements are known and compatibility is confirmed from reliable specifications. If unclear, request the device model and escalate to a colleague."
+        }
+      ]
+    },
+    {
+      "id": "case-03",
+      "draft": "The NG-C65 has a maximum output of 100 W.\nA USB-C cable is not included with the NG-C65.\nActual charging speed depends on the device and cable.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "products",
+          "title": "NG-C65 65W USB-C Charger",
+          "content": "Gears and Co NG-C65 is a fictional single-port USB-C wall charger. Maximum advertised output is 65 W with a compatible USB-C Power Delivery (PD) device and appropriately rated cable. Input: 100\u2013240 V AC, 50/60 Hz. Box contents: charger and quick-start guide; USB-C cable is not included. Product code: NG-C65. Actual charging speed depends on the connected device and cable; do not guarantee a specific charging time."
+        },
+        {
+          "id": 2,
+          "section": "products",
+          "title": "NG-P20 20,000 mAh Power Bank",
+          "content": "Gears and Co NG-P20 is a fictional rechargeable lithium-ion power bank with a rated cell capacity of 20,000 mAh. It has one USB-C port for input/output and one USB-A output port. Maximum USB-C output: 20 W when supported by the connected device and cable. Box contents: power bank, short USB-C charging cable, and quick-start guide. Product code: NG-P20. Rated cell capacity is not the same as usable output capacity because energy is lost during conversion. Do not promise a specific number of phone charges or airline eligibility."
+        },
+        {
+          "id": 3,
+          "section": "products",
+          "title": "NG-BUDS2 Wireless Earbuds",
+          "content": "Gears and Co NG-BUDS2 are fictional Bluetooth wireless earbuds with a charging case and USB-C charging port. The case and earbuds are not water-resistant unless explicitly stated on the individual product listing. Box contents: two earbuds, charging case, three pairs of silicone ear tips, USB-C cable, and quick-start guide. Product code: NG-BUDS2. Battery life depends on volume, calls, and usage conditions; avoid exact runtime promises unless verified for a particular listing."
+        },
+        {
+          "id": 4,
+          "section": "products",
+          "title": "Product Identification and Compatibility",
+          "content": "Ask for the product code from the packaging, order confirmation, or product label before giving model-specific instructions. USB-C connector shape alone does not establish charging protocol compatibility. Do not claim that a charger, cable, or power bank supports a customer's device unless its requirements are known and compatibility is confirmed from reliable specifications. If unclear, request the device model and escalate to a colleague."
+        }
+      ]
+    },
+    {
+      "id": "case-04",
+      "draft": "Charge the NG-BUDS2 case and earbuds.\nConfirm Bluetooth is enabled on your phone.\nRemove the earbuds from the phone's previously paired devices list before retrying pairing.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "troubleshooting",
+          "title": "Charger Not Charging",
+          "content": "For the NG-C65 charger, first ask whether the outlet works with another known-good device. If safe, ask the customer to try a compatible USB-C cable and a different supported device. If the charger, plug, or cable is damaged, unusually hot, discolored, producing odor, sparking, or making abnormal sounds, tell the customer to stop using it and escalate immediately. Never suggest opening or repairing a mains-powered charger."
+        },
+        {
+          "id": 2,
+          "section": "troubleshooting",
+          "title": "Power Bank Not Charging a Device",
+          "content": "For NG-P20, confirm the customer is using the intended output port and a compatible cable. Ask whether any charge indicator lights appear and whether the connected device charges with a known-good charger. If the power bank is swollen, leaking, damaged, smoking, making unusual sounds, or excessively hot, instruct the customer to stop using and charging it, keep it away from combustible materials if safe, and escalate immediately. Do not suggest opening, puncturing, or bypassing battery protection."
+        },
+        {
+          "id": 3,
+          "section": "troubleshooting",
+          "title": "Earbuds Not Pairing",
+          "content": "For NG-BUDS2, ask the customer to charge the case and earbuds, confirm Bluetooth is enabled on the phone, and remove the earbuds from the phone's previously paired devices list before retrying pairing. Ask which phone model and operating system they use. Do not invent an exact reset button sequence; if basic pairing fails, escalate for model-specific assistance."
+        },
+        {
+          "id": 4,
+          "section": "troubleshooting",
+          "title": "Missing Accessory or Physical Damage",
+          "content": "Ask for the order number, exact product code, a short description, and\u2014if the customer is comfortable\u2014a photo showing the issue without exposing payment or identity details. A colleague determines whether any part or product can be replaced. Never promise a shipment, exchange, replacement, or refund in the automated response."
+        },
+        {
+          "id": 5,
+          "section": "troubleshooting",
+          "title": "Safety-Critical Incidents",
+          "content": "Stop ordinary troubleshooting and escalate when the customer reports smoke, fire, sparks, battery swelling, leaks, electrical shock, burns, injury, or a potentially unsafe product. Tell them to stop using and charging the product; avoid handling a dangerous item unnecessarily. For active fire, injury, or immediate danger, advise contacting local emergency services. Do not provide dismantling or battery disposal procedures without approved instructions."
+        }
+      ]
+    },
+    {
+      "id": "case-05",
+      "draft": "Opening the NG-BUDS2 case makes its LED flash blue.\nConfirm Bluetooth is enabled on your phone.\nRemove the earbuds from the phone's previously paired devices list before retrying pairing.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "troubleshooting",
+          "title": "Charger Not Charging",
+          "content": "For the NG-C65 charger, first ask whether the outlet works with another known-good device. If safe, ask the customer to try a compatible USB-C cable and a different supported device. If the charger, plug, or cable is damaged, unusually hot, discolored, producing odor, sparking, or making abnormal sounds, tell the customer to stop using it and escalate immediately. Never suggest opening or repairing a mains-powered charger."
+        },
+        {
+          "id": 2,
+          "section": "troubleshooting",
+          "title": "Power Bank Not Charging a Device",
+          "content": "For NG-P20, confirm the customer is using the intended output port and a compatible cable. Ask whether any charge indicator lights appear and whether the connected device charges with a known-good charger. If the power bank is swollen, leaking, damaged, smoking, making unusual sounds, or excessively hot, instruct the customer to stop using and charging it, keep it away from combustible materials if safe, and escalate immediately. Do not suggest opening, puncturing, or bypassing battery protection."
+        },
+        {
+          "id": 3,
+          "section": "troubleshooting",
+          "title": "Earbuds Not Pairing",
+          "content": "For NG-BUDS2, ask the customer to charge the case and earbuds, confirm Bluetooth is enabled on the phone, and remove the earbuds from the phone's previously paired devices list before retrying pairing. Ask which phone model and operating system they use. Do not invent an exact reset button sequence; if basic pairing fails, escalate for model-specific assistance."
+        },
+        {
+          "id": 4,
+          "section": "troubleshooting",
+          "title": "Missing Accessory or Physical Damage",
+          "content": "Ask for the order number, exact product code, a short description, and\u2014if the customer is comfortable\u2014a photo showing the issue without exposing payment or identity details. A colleague determines whether any part or product can be replaced. Never promise a shipment, exchange, replacement, or refund in the automated response."
+        },
+        {
+          "id": 5,
+          "section": "troubleshooting",
+          "title": "Safety-Critical Incidents",
+          "content": "Stop ordinary troubleshooting and escalate when the customer reports smoke, fire, sparks, battery swelling, leaks, electrical shock, burns, injury, or a potentially unsafe product. Tell them to stop using and charging the product; avoid handling a dangerous item unnecessarily. For active fire, injury, or immediate danger, advise contacting local emergency services. Do not provide dismantling or battery disposal procedures without approved instructions."
+        }
+      ]
+    },
+    {
+      "id": "case-06",
+      "draft": "Opening the NG-BUDS2 case makes its LED flash blue.\nConfirm Bluetooth is enabled on your phone.\nRemove the earbuds from the phone's previously paired devices list before retrying pairing.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "troubleshooting",
+          "title": "Charger Not Charging",
+          "content": "For the NG-C65 charger, first ask whether the outlet works with another known-good device. If safe, ask the customer to try a compatible USB-C cable and a different supported device. If the charger, plug, or cable is damaged, unusually hot, discolored, producing odor, sparking, or making abnormal sounds, tell the customer to stop using it and escalate immediately. Never suggest opening or repairing a mains-powered charger."
+        },
+        {
+          "id": 2,
+          "section": "troubleshooting",
+          "title": "Power Bank Not Charging a Device",
+          "content": "For NG-P20, confirm the customer is using the intended output port and a compatible cable. Ask whether any charge indicator lights appear and whether the connected device charges with a known-good charger. If the power bank is swollen, leaking, damaged, smoking, making unusual sounds, or excessively hot, instruct the customer to stop using and charging it, keep it away from combustible materials if safe, and escalate immediately. Do not suggest opening, puncturing, or bypassing battery protection."
+        },
+        {
+          "id": 3,
+          "section": "troubleshooting",
+          "title": "Earbuds Not Pairing",
+          "content": "For NG-BUDS2, ask the customer to charge the case and earbuds, confirm Bluetooth is enabled on the phone, and remove the earbuds from the phone's previously paired devices list before retrying pairing. Ask which phone model and operating system they use. Do not invent an exact reset button sequence; if basic pairing fails, escalate for model-specific assistance."
+        },
+        {
+          "id": 4,
+          "section": "troubleshooting",
+          "title": "Missing Accessory or Physical Damage",
+          "content": "Ask for the order number, exact product code, a short description, and\u2014if the customer is comfortable\u2014a photo showing the issue without exposing payment or identity details. A colleague determines whether any part or product can be replaced. Never promise a shipment, exchange, replacement, or refund in the automated response."
+        },
+        {
+          "id": 5,
+          "section": "troubleshooting",
+          "title": "Safety-Critical Incidents",
+          "content": "Stop ordinary troubleshooting and escalate when the customer reports smoke, fire, sparks, battery swelling, leaks, electrical shock, burns, injury, or a potentially unsafe product. Tell them to stop using and charging the product; avoid handling a dangerous item unnecessarily. For active fire, injury, or immediate danger, advise contacting local emergency services. Do not provide dismantling or battery disposal procedures without approved instructions."
+        }
+      ]
+    },
+    {
+      "id": "case-07",
+      "draft": "Customers may request a return within 30 calendar days after confirmed delivery.\nEligibility depends on item condition, sales channel, and applicable law.\nRefund requests require a human colleague.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "returns-refunds",
+          "title": "Return Eligibility",
+          "content": "For this fictional Gears and Co demonstration store, customers may request a return within 30 calendar days after confirmed delivery. Eligibility depends on the item condition, sales channel, and applicable law. This is a sample policy, not a statement about any real retailer. The automated agent may explain the general policy but must not approve or deny a specific return."
+        },
+        {
+          "id": 2,
+          "section": "returns-refunds",
+          "title": "How to Request a Return",
+          "content": "Ask the customer for the order number, product code, delivery date, and reason for the request. Do not ask for passwords, full card numbers, or identity documents. A colleague verifies the order and supplies the authorized return instructions or label, if applicable. Do not instruct customers to ship lithium-battery products without approved carrier and safety guidance."
+        },
+        {
+          "id": 3,
+          "section": "returns-refunds",
+          "title": "Refund Requests",
+          "content": "Every request for a refund, chargeback, partial refund, payment reversal, or compensation must go to a human colleague. The automated agent must not promise an amount, approval, refund date, or payment status. If a customer asks whether a refund has already been issued, explain that the support team must check the transaction securely."
+        },
+        {
+          "id": 4,
+          "section": "returns-refunds",
+          "title": "Orders Placed Through Marketplaces",
+          "content": "For purchases made through an external marketplace, follow the marketplace's documented return workflow where applicable. The agent must not assume it can access marketplace order records. Ask the customer which channel they used and escalate account-specific questions to a colleague."
+        }
+      ]
+    },
+    {
+      "id": "case-08",
+      "draft": "Customers may request a return within 90 calendar days after confirmed delivery.\nEligibility depends on item condition, sales channel, and applicable law.\nRefund requests require a human colleague.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "returns-refunds",
+          "title": "Return Eligibility",
+          "content": "For this fictional Gears and Co demonstration store, customers may request a return within 30 calendar days after confirmed delivery. Eligibility depends on the item condition, sales channel, and applicable law. This is a sample policy, not a statement about any real retailer. The automated agent may explain the general policy but must not approve or deny a specific return."
+        },
+        {
+          "id": 2,
+          "section": "returns-refunds",
+          "title": "How to Request a Return",
+          "content": "Ask the customer for the order number, product code, delivery date, and reason for the request. Do not ask for passwords, full card numbers, or identity documents. A colleague verifies the order and supplies the authorized return instructions or label, if applicable. Do not instruct customers to ship lithium-battery products without approved carrier and safety guidance."
+        },
+        {
+          "id": 3,
+          "section": "returns-refunds",
+          "title": "Refund Requests",
+          "content": "Every request for a refund, chargeback, partial refund, payment reversal, or compensation must go to a human colleague. The automated agent must not promise an amount, approval, refund date, or payment status. If a customer asks whether a refund has already been issued, explain that the support team must check the transaction securely."
+        },
+        {
+          "id": 4,
+          "section": "returns-refunds",
+          "title": "Orders Placed Through Marketplaces",
+          "content": "For purchases made through an external marketplace, follow the marketplace's documented return workflow where applicable. The agent must not assume it can access marketplace order records. Ask the customer which channel they used and escalate account-specific questions to a colleague."
+        }
+      ]
+    },
+    {
+      "id": "case-09",
+      "draft": "Customers may request a return within 90 calendar days after confirmed delivery.\nEligibility depends on item condition, sales channel, and applicable law.\nRefund requests require a human colleague.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "returns-refunds",
+          "title": "Return Eligibility",
+          "content": "For this fictional Gears and Co demonstration store, customers may request a return within 30 calendar days after confirmed delivery. Eligibility depends on the item condition, sales channel, and applicable law. This is a sample policy, not a statement about any real retailer. The automated agent may explain the general policy but must not approve or deny a specific return."
+        },
+        {
+          "id": 2,
+          "section": "returns-refunds",
+          "title": "How to Request a Return",
+          "content": "Ask the customer for the order number, product code, delivery date, and reason for the request. Do not ask for passwords, full card numbers, or identity documents. A colleague verifies the order and supplies the authorized return instructions or label, if applicable. Do not instruct customers to ship lithium-battery products without approved carrier and safety guidance."
+        },
+        {
+          "id": 3,
+          "section": "returns-refunds",
+          "title": "Refund Requests",
+          "content": "Every request for a refund, chargeback, partial refund, payment reversal, or compensation must go to a human colleague. The automated agent must not promise an amount, approval, refund date, or payment status. If a customer asks whether a refund has already been issued, explain that the support team must check the transaction securely."
+        },
+        {
+          "id": 4,
+          "section": "returns-refunds",
+          "title": "Orders Placed Through Marketplaces",
+          "content": "For purchases made through an external marketplace, follow the marketplace's documented return workflow where applicable. The agent must not assume it can access marketplace order records. Ask the customer which channel they used and escalate account-specific questions to a colleague."
+        }
+      ]
+    },
+    {
+      "id": "case-10",
+      "draft": "The illustrative delivery estimate is 3\u20137 business days after dispatch within supported domestic areas.\nThe estimate is not a guarantee.\nPingo does not have live order or carrier access by default.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "shipping",
+          "title": "Standard Delivery Estimates",
+          "content": "For fictional Gears and Co direct-store orders, the illustrative standard delivery estimate is 3\u20137 business days after dispatch within supported domestic delivery areas. It is an estimate, not a guarantee. Do not claim a parcel has shipped or give a specific arrival date unless an authorized shipping integration provides that information."
+        },
+        {
+          "id": 2,
+          "section": "shipping",
+          "title": "Tracking and Order Status",
+          "content": "Customers can use a tracking link in their dispatch notification if one was issued. Pingo does not have live order or carrier access by default. For a missing tracking link, late parcel, or request about a specific order, ask for the order number and escalate to a colleague. Never manufacture tracking numbers or statuses."
+        },
+        {
+          "id": 3,
+          "section": "shipping",
+          "title": "Shipping Address Changes",
+          "content": "Address changes and cancellation requests require human verification. Do not confirm an address change, reroute, or cancellation. Avoid asking for a complete address over an unsecured email exchange when an authenticated workflow is available."
+        },
+        {
+          "id": 4,
+          "section": "shipping",
+          "title": "Lost, Damaged, or Incorrect Deliveries",
+          "content": "Ask for the order number, product code, a concise problem description, and a photo if useful and safe to share. Escalate carrier investigations, transit damage, missing packages, and incorrect shipments. Do not promise a replacement or refund."
+        }
+      ]
+    },
+    {
+      "id": "case-11",
+      "draft": "Pingo has live carrier access by default.\nThe estimate is not a guarantee.\nPingo does not have live order or carrier access by default.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "shipping",
+          "title": "Standard Delivery Estimates",
+          "content": "For fictional Gears and Co direct-store orders, the illustrative standard delivery estimate is 3\u20137 business days after dispatch within supported domestic delivery areas. It is an estimate, not a guarantee. Do not claim a parcel has shipped or give a specific arrival date unless an authorized shipping integration provides that information."
+        },
+        {
+          "id": 2,
+          "section": "shipping",
+          "title": "Tracking and Order Status",
+          "content": "Customers can use a tracking link in their dispatch notification if one was issued. Pingo does not have live order or carrier access by default. For a missing tracking link, late parcel, or request about a specific order, ask for the order number and escalate to a colleague. Never manufacture tracking numbers or statuses."
+        },
+        {
+          "id": 3,
+          "section": "shipping",
+          "title": "Shipping Address Changes",
+          "content": "Address changes and cancellation requests require human verification. Do not confirm an address change, reroute, or cancellation. Avoid asking for a complete address over an unsecured email exchange when an authenticated workflow is available."
+        },
+        {
+          "id": 4,
+          "section": "shipping",
+          "title": "Lost, Damaged, or Incorrect Deliveries",
+          "content": "Ask for the order number, product code, a concise problem description, and a photo if useful and safe to share. Escalate carrier investigations, transit damage, missing packages, and incorrect shipments. Do not promise a replacement or refund."
+        }
+      ]
+    },
+    {
+      "id": "case-12",
+      "draft": "Pingo has live carrier access by default.\nThe estimate is not a guarantee.\nPingo does not have live order or carrier access by default.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "shipping",
+          "title": "Standard Delivery Estimates",
+          "content": "For fictional Gears and Co direct-store orders, the illustrative standard delivery estimate is 3\u20137 business days after dispatch within supported domestic delivery areas. It is an estimate, not a guarantee. Do not claim a parcel has shipped or give a specific arrival date unless an authorized shipping integration provides that information."
+        },
+        {
+          "id": 2,
+          "section": "shipping",
+          "title": "Tracking and Order Status",
+          "content": "Customers can use a tracking link in their dispatch notification if one was issued. Pingo does not have live order or carrier access by default. For a missing tracking link, late parcel, or request about a specific order, ask for the order number and escalate to a colleague. Never manufacture tracking numbers or statuses."
+        },
+        {
+          "id": 3,
+          "section": "shipping",
+          "title": "Shipping Address Changes",
+          "content": "Address changes and cancellation requests require human verification. Do not confirm an address change, reroute, or cancellation. Avoid asking for a complete address over an unsecured email exchange when an authenticated workflow is available."
+        },
+        {
+          "id": 4,
+          "section": "shipping",
+          "title": "Lost, Damaged, or Incorrect Deliveries",
+          "content": "Ask for the order number, product code, a concise problem description, and a photo if useful and safe to share. Escalate carrier investigations, transit damage, missing packages, and incorrect shipments. Do not promise a replacement or refund."
+        }
+      ]
+    },
+    {
+      "id": "case-13",
+      "draft": "The fictional products carry a limited 12-month warranty from verified delivery against manufacturing defects, subject to applicable consumer law.\nA colleague evaluates warranty eligibility.\nThe automated agent cannot guarantee a replacement.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "warranty",
+          "title": "Warranty Periods",
+          "content": "For this fictional demonstration store, NG-C65 chargers, NG-P20 power banks, and NG-BUDS2 earbuds carry a limited 12-month warranty from the verified delivery date against manufacturing defects, subject to applicable consumer law. These are sample business rules and must be verified or replaced before using Pingo for a real business."
+        },
+        {
+          "id": 2,
+          "section": "warranty",
+          "title": "What the Warranty Covers",
+          "content": "Potential manufacturing defects may include a product failing under normal intended use. Eligibility is evaluated by a colleague using order information and evidence. The agent may explain this general policy but cannot declare a claim approved or guarantee replacement, repair, or refund."
+        },
+        {
+          "id": 3,
+          "section": "warranty",
+          "title": "What the Warranty Does Not Normally Cover",
+          "content": "Accidental damage, unauthorized repair, misuse, alteration, and ordinary wear are not normally covered under the sample policy, subject to legal rights that cannot be excluded. The agent must not reject an individual claim without human review."
+        },
+        {
+          "id": 4,
+          "section": "warranty",
+          "title": "How to Start a Warranty Review",
+          "content": "Request the order number, product code, approximate delivery date, symptoms, and any safe photos. Do not request sensitive payment credentials. A colleague handles verification and the outcome. For swollen, leaking, overheating, or damaged batteries, follow safety escalation before any routine warranty steps."
+        }
+      ]
+    },
+    {
+      "id": "case-14",
+      "draft": "The fictional products carry a 24-month warranty from verified delivery against manufacturing defects.\nA colleague evaluates warranty eligibility.\nThe automated agent cannot guarantee a replacement.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "warranty",
+          "title": "Warranty Periods",
+          "content": "For this fictional demonstration store, NG-C65 chargers, NG-P20 power banks, and NG-BUDS2 earbuds carry a limited 12-month warranty from the verified delivery date against manufacturing defects, subject to applicable consumer law. These are sample business rules and must be verified or replaced before using Pingo for a real business."
+        },
+        {
+          "id": 2,
+          "section": "warranty",
+          "title": "What the Warranty Covers",
+          "content": "Potential manufacturing defects may include a product failing under normal intended use. Eligibility is evaluated by a colleague using order information and evidence. The agent may explain this general policy but cannot declare a claim approved or guarantee replacement, repair, or refund."
+        },
+        {
+          "id": 3,
+          "section": "warranty",
+          "title": "What the Warranty Does Not Normally Cover",
+          "content": "Accidental damage, unauthorized repair, misuse, alteration, and ordinary wear are not normally covered under the sample policy, subject to legal rights that cannot be excluded. The agent must not reject an individual claim without human review."
+        },
+        {
+          "id": 4,
+          "section": "warranty",
+          "title": "How to Start a Warranty Review",
+          "content": "Request the order number, product code, approximate delivery date, symptoms, and any safe photos. Do not request sensitive payment credentials. A colleague handles verification and the outcome. For swollen, leaking, overheating, or damaged batteries, follow safety escalation before any routine warranty steps."
+        }
+      ]
+    },
+    {
+      "id": "case-15",
+      "draft": "The fictional products carry a 24-month warranty from verified delivery against manufacturing defects.\nA colleague evaluates warranty eligibility.\nThe automated agent cannot guarantee a replacement.",
+      "articles": [
+        {
+          "id": 1,
+          "section": "warranty",
+          "title": "Warranty Periods",
+          "content": "For this fictional demonstration store, NG-C65 chargers, NG-P20 power banks, and NG-BUDS2 earbuds carry a limited 12-month warranty from the verified delivery date against manufacturing defects, subject to applicable consumer law. These are sample business rules and must be verified or replaced before using Pingo for a real business."
+        },
+        {
+          "id": 2,
+          "section": "warranty",
+          "title": "What the Warranty Covers",
+          "content": "Potential manufacturing defects may include a product failing under normal intended use. Eligibility is evaluated by a colleague using order information and evidence. The agent may explain this general policy but cannot declare a claim approved or guarantee replacement, repair, or refund."
+        },
+        {
+          "id": 3,
+          "section": "warranty",
+          "title": "What the Warranty Does Not Normally Cover",
+          "content": "Accidental damage, unauthorized repair, misuse, alteration, and ordinary wear are not normally covered under the sample policy, subject to legal rights that cannot be excluded. The agent must not reject an individual claim without human review."
+        },
+        {
+          "id": 4,
+          "section": "warranty",
+          "title": "How to Start a Warranty Review",
+          "content": "Request the order number, product code, approximate delivery date, symptoms, and any safe photos. Do not request sensitive payment credentials. A colleague handles verification and the outcome. For swollen, leaking, overheating, or damaged batteries, follow safety escalation before any routine warranty steps."
+        }
+      ]
+    }
+  ]
+}
