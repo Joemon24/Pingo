@@ -53,3 +53,5 @@ dashboard/dist/
 evals/results/
 evals/human_labels.completed*.json
 # A manually reviewed final baseline summary may be committed separately.
+
+*.validation-failures.json

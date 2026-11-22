@@ -366,3 +366,48 @@ def test_resume_keeps_successes_and_only_runs_missing_cases(extraction):
         assert result["metrics"]["combined"]["excluding_failures"]["agreement"]["numerator"] == 2
     with pytest.raises(ValueError, match="different judge_model"):
         reused_results(report, {"mode": mode, "judge_model": "groq:other"}, inputs)
+
+
+def test_rejected_quote_is_saved_after_rate_limit_retry(monkeypatch, tmp_path, capsys):
+    from pydantic_ai.exceptions import ModelRateLimitError
+
+    invalid = GRADE.model_copy(deep=True)
+    invalid.judgments[0].evidence[0].quote = "Unverified quote"
+    grader = Mock()
+    grader.run_sync.side_effect = [
+        ModelRateLimitError("fixture", "busy", retry_after=1), SimpleNamespace(output=invalid),
+    ]
+    monkeypatch.setattr("evals.calibrate.sleep", Mock())
+    monkeypatch.setattr("evals.calibrate.check_model", Mock())
+    monkeypatch.setattr("evals.calibrate.make_agents", lambda _: (Mock(), grader))
+    monkeypatch.setattr("evals.calibrate.load_labels", lambda *_: (
+        {"cases": [CASE]}, {"fixture/c1": "supported"}, {},
+    ))
+    output = tmp_path / "report.json"
+    main(["--live", "--judge-model", "groq:fixture", "--human-labels", "labels.json",
+          "--output", str(output)])
+    report = json.loads(output.read_text())
+    rejected = json.loads((tmp_path / report["validation_artifact_file"]).read_text())["failures"][0]
+    assert rejected["attempt"] == "after_retry"
+    assert rejected["case_id"] == "seeded/fixture"
+    assert rejected["cited_article_id"] == 1
+    assert rejected["rejected_quote"] == "Unverified quote"
+    assert rejected["articles"] == ARTICLES
+    assert rejected["rejected_output"] == invalid.model_dump()
+    assert report["validation_rates"]["first"]["denominator"] == 1
+    assert report["validation_rates"]["first"]["numerator"] == 0
+    assert report["validation_rates"]["after_retry"]["numerator"] == 1
+    assert report["validation_rates"]["after_retry"]["denominator"] == 1
+    assert "Unverified quote" not in capsys.readouterr().err
+
+
+def test_extractor_validation_retains_rejected_span():
+    extractor = Mock()
+    invalid = Inventory(claims=[Claim(id="c1", text="Different words.")])
+    extractor.run_sync.return_value.output = invalid
+    report = run_calibration([({"cases": [CASE]}, {"fixture/c1": "supported"})], extractor, Mock(), True)
+    rejected = report["validation_artifacts"][0]
+    assert rejected["stage"] == "extraction"
+    assert rejected["attempt"] == "first"
+    assert rejected["rejected_output"] == invalid.model_dump()
+    assert report["validation_rates"]["first"]["numerator"] == 1

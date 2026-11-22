@@ -58,29 +58,65 @@ class Grade(BaseModel):
 
 
 class JudgeOutputError(ValueError):
-    """A validation failure with a fixed message safe to store in reports."""
+    """Safe message for logs, with rejected output available to offline reports."""
+
+    def __init__(self, message: str, *, stage: str, rejected_output,
+                 evidence: Evidence | None = None, articles: list[dict] | None = None,
+                 inventory: Inventory | None = None):
+        super().__init__(message)
+        self.stage = stage
+        self.rejected_output = rejected_output
+        self.evidence = evidence
+        self.articles = articles
+        self.inventory = inventory
 
 
 def validate_inventory(draft: str, inventory: Inventory) -> None:
     ids = [claim.id for claim in inventory.claims]
     if len(ids) != len(set(ids)):
-        raise JudgeOutputError("Duplicate extracted claim IDs")
+        raise JudgeOutputError("Duplicate extracted claim IDs", stage="extraction", rejected_output=inventory.model_dump())
     for claim in inventory.claims:
         if claim.text not in draft:
-            raise JudgeOutputError("Extracted claim is not an exact draft span")
+            raise JudgeOutputError("Extracted claim is not an exact draft span", stage="extraction", rejected_output=inventory.model_dump())
 
 
 def validate_grade(inventory: Inventory, grade: Grade, articles: list[dict]) -> None:
     ids = [entry.claim_id for entry in grade.judgments]
+    def error(message: str, evidence: Evidence | None = None) -> JudgeOutputError:
+        return JudgeOutputError(
+            message, stage="grading", rejected_output=grade.model_dump(),
+            evidence=evidence, articles=articles, inventory=inventory,
+        )
+
     if len(ids) != len(set(ids)) or set(ids) != {claim.id for claim in inventory.claims}:
-        raise JudgeOutputError("Judge omitted, duplicated, or added inventory claims")
+        raise error("Judge omitted, duplicated, or added inventory claims")
     contents = {article["id"]: article["content"] for article in articles}
     for judgment in grade.judgments:
         if judgment.label != "unsupported" and not judgment.evidence:
-            raise JudgeOutputError("Supported/contradicted labels require evidence")
+            raise error("Supported/contradicted labels require evidence")
         for evidence in judgment.evidence:
             if evidence.article_id not in contents or evidence.quote not in contents[evidence.article_id]:
-                raise JudgeOutputError("Judge cited an unavailable quote")
+                raise error("Judge cited an unavailable quote", evidence)
+
+
+def run_stage(agent, payload: str, stage: str):
+    from pydantic_ai import capture_run_messages
+    from pydantic_ai.exceptions import UnexpectedModelBehavior
+    from pydantic_ai.messages import ModelMessagesTypeAdapter, ModelResponse
+
+    with capture_run_messages() as messages:
+        try:
+            return agent.run_sync(payload)
+        except UnexpectedModelBehavior as exc:
+            # The installed SDK distinguishes exhausted output validation from transport errors.
+            if not exc.message.startswith("Exceeded maximum output retries"):
+                raise
+            responses = [message for message in messages if isinstance(message, ModelResponse)]
+            raise JudgeOutputError(
+                "Native output validation exhausted", stage=stage,
+                rejected_output=ModelMessagesTypeAdapter.dump_python(responses, mode="json"),
+            ) from exc
+
 
 
 def make_agents(model):
@@ -101,9 +137,13 @@ def build_grader_input(draft: str, inventory: Inventory, articles: list[dict]) -
 
 
 def judge_draft(draft: str, articles: list[dict], extractor, grader) -> dict:
-    inventory = extractor.run_sync(json.dumps({"draft": draft})).output
+    inventory = run_stage(extractor, json.dumps({"draft": draft}), "extraction").output
     payload = build_grader_input(draft, inventory, articles)
-    grade = grader.run_sync(payload).output
+    try:
+        grade = run_stage(grader, payload, "grading").output
+    except JudgeOutputError as exc:
+        exc.inventory = inventory
+        raise
     validate_grade(inventory, grade, articles)
     return {"inventory": inventory.model_dump(), "grade": grade.model_dump(),
             "extraction_coverage": "unverified; requires human review"}

@@ -14,12 +14,14 @@ from pydantic_ai.exceptions import ModelQuotaExceededError, ModelRateLimitError
 from evals.groundedness import (
     GRADING_PROMPT, EXTRACTION_PROMPT, JUDGE_VERSION, Grade, Inventory, JudgeOutputError, make_agents,
     validate_grade, validate_inventory, specificity_flags, build_grader_input,
-    check_model, smoke_agents,
+    check_model, smoke_agents, run_stage,
 )
+from evals.failure_artifacts import artifact, write_artifacts
 from evals.measurement import load_labels, claim_covered, summarize, rate
 
 
-def retry_rate_limit(call, case_id: str, interval_seconds: float):
+def retry_rate_limit(call, case_id: str, interval_seconds: float, attempts: list[str]):
+    attempts.append("first")
     try:
         return call()
     except ModelRateLimitError as exc:
@@ -29,6 +31,7 @@ def retry_rate_limit(call, case_id: str, interval_seconds: float):
         delay = max(1, provider_delay, interval_seconds)
         print(f"{case_id}: rate limited; retrying once in {delay:g}s", file=sys.stderr, flush=True)
         sleep(delay)
+        attempts.append("after_retry")
         return call()
 
 
@@ -38,7 +41,7 @@ def case_inventory(case: dict) -> Inventory:
 
 def calibrate_case(case: dict, grader):
     inventory = case_inventory(case)
-    run = grader.run_sync(build_grader_input(case["draft"], inventory, case["articles"]))
+    run = run_stage(grader, build_grader_input(case["draft"], inventory, case["articles"]), "grading")
     validate_grade(inventory, run.output, case["articles"])
     return run
 
@@ -88,6 +91,9 @@ def run_calibration(
     rate_limit_blocked = False
     model_call_attempted = False
     deferred_cases = []
+    validation_failures = []
+    attempts_by_phase = Counter()
+    validation_by_phase = Counter()
     for dataset, human in inputs:
         stratum = dataset.get("stratum", "seeded")
         if stratum not in {"seeded", "natural"}:
@@ -108,6 +114,7 @@ def run_calibration(
                 count["claims"] += len(case["claims"])
                 count["deferred_drafts"] += int(deferred)
             if not deferred:
+                attempts: list[str] = []
                 try:
                     if key not in previous_results:
                         if model_call_attempted and interval_seconds:
@@ -119,7 +126,7 @@ def run_calibration(
                         else:
                             payload = json.dumps({"draft": case["draft"]})
                             inventory = retry_rate_limit(
-                                lambda: extractor.run_sync(payload), key, interval_seconds,
+                                lambda: run_stage(extractor, payload, "extraction"), key, interval_seconds, attempts,
                             ).output
                             validate_inventory(case["draft"], inventory)
                             result["inventory"] = inventory.model_dump()
@@ -131,7 +138,7 @@ def run_calibration(
                         if key in previous_results:
                             grade = Grade.model_validate(result["grade"])
                         else:
-                            run = retry_rate_limit(lambda: calibrate_case(case, grader), key, interval_seconds)
+                            run = retry_rate_limit(lambda: calibrate_case(case, grader), key, interval_seconds, attempts)
                             grade = run.output
                             result["grade"] = grade.model_dump()
                             result["usage"] = {
@@ -147,12 +154,18 @@ def run_calibration(
                     }
                     if isinstance(exc, JudgeOutputError):
                         failure["validation_issue"] = str(exc)
+                        attempt = attempts[-1] if attempts else "input"
+                        if attempts:
+                            validation_by_phase[attempt] += 1
+                        validation_failures.append(artifact(key, case, exc, attempt))
                         print(f"{key}: {exc}", file=sys.stderr, flush=True)
                     failures.append(failure)
                     if isinstance(exc, (ModelRateLimitError, ModelQuotaExceededError)):
                         rate_limit_blocked = True
                         print(f"{key}: {type(exc).__name__}; deferring remaining model calls",
                               file=sys.stderr, flush=True)
+                finally:
+                    attempts_by_phase.update(attempts)
             for claim in case["claims"]:
                 flags = specificity_flags(claim["text"], case["articles"])
                 rows.append({
@@ -164,6 +177,11 @@ def run_calibration(
     for count in extraction_counts.values():
         count["recall"] = rate(count["covered"], count["claims"])
     return {
+        "validation_artifacts": validation_failures,
+        "validation_rates": {
+            phase: rate(validation_by_phase[phase], attempts_by_phase[phase])
+            for phase in ("first", "after_retry")
+        },
         "failures": failures, "failure_types": dict(Counter(row["stage"] + "/" + row["error_type"] for row in failures)),
         "judge_failure_count": sum(row["stage"] == "grading" for row in failures),
         "reused_case_count": len(previous_results),
@@ -243,9 +261,13 @@ def main(argv=None) -> None:
         interval_caveat="Wilson intervals treat claims as independent. Claims within drafts are correlated; intervals are descriptive.",
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
+    artifacts = report.pop("validation_artifacts")
+    if artifacts:
+        report["validation_artifact_file"] = write_artifacts(args.output, artifacts, identity).name
     args.output.write_text(json.dumps(report, indent=2))
     print("Judge failures:", report["judge_failure_count"])
     print("Failure types:", json.dumps(report["failure_types"]))
+    print("Validation failure rates (new attempts):", json.dumps(report["validation_rates"]))
     print("Cases reused:", report["reused_case_count"])
     print("Cases deferred:", len(report["deferred_cases"]))
     if args.extraction:
