@@ -50,7 +50,7 @@ The output directory contains dataset.json, human_evidence.json, and human_label
 ## Prompt archive
 
 prompts/pingo-v2-citations.txt is the exact concatenated generation instruction text archived from the running implementation. Runtime loads this file by default.
-prompts/pingo-v1-reconstructed.txt is a reconstruction, not an archived historical original. It is v2 with only citation-instructions.txt removed. The structured output schema, model settings, knowledge retrieval, and other policies remain the same.
+prompts/pingo-v1-reconstructed.txt is a reconstruction, not an archived historical original. It is v2 with only the exact string stored in citation-instructions.json removed. The structured output schema, model settings, knowledge retrieval, and other policies remain the same.
 evals.run accepts --prompt-version pingo-v2-citations or pingo-v1-reconstructed. The reconstructed run bypasses the citation-integrity gate to retain comparable uncited drafts. This switch is evaluation-process-local; the dashboard keeps v2.
 No before/after comparison has been performed in Phase 1B.
 

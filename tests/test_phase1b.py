@@ -180,7 +180,7 @@ def test_prompt_archive_exact_reconstruction():
 
     root = Path("prompts")
     v2 = load_prompt("pingo-v2-citations")
-    citation_text = (root / "citation-instructions.txt").read_text()
+    citation_text = json.loads((root / "citation-instructions.json").read_text())
     assert v2.count(citation_text) == 1
     assert v2.replace(citation_text, "") == load_prompt("pingo-v1-reconstructed")
     with pytest.raises(ValueError):
