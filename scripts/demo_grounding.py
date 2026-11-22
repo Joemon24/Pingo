@@ -58,8 +58,8 @@ def label_form(report_path: Path, output: Path, model: str) -> int:
     report = json.loads(raw)
     if report.get("prompt_version") != "pingo-v2-citations":
         raise ValueError("Use a pingo-v2-citations capture")
-    if output.exists():
-        raise ValueError("Choose a new directory for the blank form")
+    if output.exists() or output.with_suffix(".validation-failures.json").exists():
+        raise ValueError("Choose a new directory for the blank form and its validation artifact")
     evidence = report["generation_evidence"]
     draft = (evidence.get("generated_draft") or {}).get("reply")
     articles = evidence.get("articles")
@@ -68,14 +68,31 @@ def label_form(report_path: Path, output: Path, model: str) -> int:
     check_model(model)
     extractor, _ = make_agents(model)
     case = {"draft": draft, "articles": articles}
+    source_hash = sha256(raw).hexdigest()
+    payload = {"draft": draft}
+    rejected = []
+    # This retry is for the interactive form only. Calibration keeps its original prompt and rates.
     try:
-        inventory = run_stage(extractor, json.dumps({"draft": draft}), "extraction").output
-        validate_inventory(draft, inventory)
-    except JudgeOutputError as exc:
-        output.parent.mkdir(parents=True, exist_ok=True)
-        location = write_artifacts(output, [artifact("bluetooth-demo", case, exc, "first")],
-                                   {"source_sha256": sha256(raw).hexdigest(), "judge_model": model})
-        raise ValueError(f"Extraction failed validation. See {location}.") from None
+        for attempt in ("first", "after_retry"):
+            try:
+                inventory = run_stage(extractor, json.dumps(payload), "extraction").output
+                validate_inventory(draft, inventory)
+                break
+            except JudgeOutputError as exc:
+                rejected.append(artifact("bluetooth-demo", case, exc, attempt))
+                payload["validation_feedback"] = (
+                    f"The previous extraction failed validation: {exc}. "
+                    "Copy each claim as an exact contiguous span from draft, with a unique ID. "
+                    "If splitting a sentence would require rewriting it or adding punctuation, "
+                    "copy a larger contiguous span and preserve its qualifiers."
+                )
+        else:
+            raise ValueError("Extraction failed validation after one retry")
+    finally:
+        if rejected:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            location = write_artifacts(output, rejected, {"source_sha256": source_hash, "judge_model": model})
+            print("Extraction validation failures saved to", location)
     if not inventory.claims:
         raise ValueError("Extractor returned zero claims")
     selected = [
@@ -83,7 +100,7 @@ def label_form(report_path: Path, output: Path, model: str) -> int:
          "category": report["decision"]["section"]}
         for claim in inventory.claims
     ]
-    write_sample(selected, output, sha256(raw).hexdigest(), None, [])
+    write_sample(selected, output, source_hash, None, [])
     return len(selected)
 
 

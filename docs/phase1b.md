@@ -132,3 +132,8 @@ Check that every troubleshooting claim follows from the cited article. For the m
 detail, check for human review or an explicit statement that the detail is unavailable.
 An invented interval or LED behavior is a recorded failure. Review the blind form alongside
 its evidence and fill your own labels before looking at any judge predictions.
+
+If the extractor returns invalid spans when creating the Bluetooth blind form, the kit
+makes one corrective extraction attempt on the same saved draft. A sidecar records each
+rejected response. A second validation failure leaves no blind form. This retry is scoped
+to the kit and does not enter seeded calibration rates.
