@@ -434,3 +434,23 @@ def test_extraction_denominator_includes_all_seed_drafts_after_rate_limit(monkey
     assert {row["claims"] for row in report["extraction"].values()} == {15}
     assert [row["status"] for row in report["extraction_cases"]] == ["failed"] + ["deferred"] * 14
     assert extractor.run_sync.call_count == 2
+
+
+def test_natural_sampling_records_a_rejected_extraction():
+    from evals.sample_natural import extract_candidates
+
+    invalid = Inventory(claims=[Claim(id="c1", text="Different text.")])
+    extractor = Mock()
+    extractor.run_sync.return_value.output = invalid
+    rejected = []
+    candidates, failures = extract_candidates({"results": [{
+        "id": "fixture", "generation_evidence": {
+            "articles": ARTICLES, "generated_draft": {"reply": CASE["draft"]},
+        },
+    }]}, extractor, validation_failures=rejected)
+
+    assert not candidates
+    assert failures == [{"case": "fixture", "error_type": "JudgeOutputError"}]
+    assert rejected[0]["rejected_output"] == invalid.model_dump()
+    assert rejected[0]["articles"] == ARTICLES
+    assert rejected[0]["attempt"] == "first"

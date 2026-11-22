@@ -6,7 +6,8 @@ import json
 from pathlib import Path
 import random
 
-from evals.groundedness import make_agents, check_model, validate_inventory
+from evals.failure_artifacts import artifact, write_artifacts
+from evals.groundedness import JudgeOutputError, make_agents, check_model, run_stage, validate_inventory
 
 
 def sample_claims(candidates: list[dict], n: int, seed: int) -> list[dict]:
@@ -27,7 +28,9 @@ def sample_claims(candidates: list[dict], n: int, seed: int) -> list[dict]:
     return selected
 
 
-def extract_candidates(report: dict, extractor) -> tuple[list[dict], list[dict]]:
+def extract_candidates(
+    report: dict, extractor, *, validation_failures: list[dict] | None = None,
+) -> tuple[list[dict], list[dict]]:
     candidates, failures = [], []
     for index, case in enumerate(report["results"]):
         snapshot = case.get("generation_evidence", {})
@@ -38,12 +41,14 @@ def extract_candidates(report: dict, extractor) -> tuple[list[dict], list[dict]]
         if not articles:
             failures.append({"case": case["id"], "error_type": "MissingArticleSnapshot"})
             continue
+        draft = generated["reply"]
         try:
-            draft = generated["reply"]
-            inventory = extractor.run_sync(json.dumps({"draft": draft})).output
+            inventory = run_stage(extractor, json.dumps({"draft": draft}), "extraction").output
             validate_inventory(draft, inventory)
         except Exception as exc:
             failures.append({"case": case["id"], "error_type": type(exc).__name__})
+            if validation_failures is not None and isinstance(exc, JudgeOutputError):
+                validation_failures.append(artifact(case["id"], {"draft": draft, "articles": articles}, exc, "first"))
             continue
         for claim in inventory.claims:
             candidates.append({
@@ -100,7 +105,14 @@ def main(argv=None) -> None:
     report = json.loads(raw)
     check_model(args.judge_model)
     extractor, _ = make_agents(args.judge_model)
-    candidates, failures = extract_candidates(report, extractor)
+    rejected: list[dict] = []
+    candidates, failures = extract_candidates(report, extractor, validation_failures=rejected)
+    if rejected:
+        args.output_dir.parent.mkdir(parents=True, exist_ok=True)
+        location = write_artifacts(args.output_dir, rejected, {
+            "source_sha256": sha256(raw).hexdigest(), "judge_model": args.judge_model,
+        })
+        print("Validation failures saved to", location)
     print("Extraction failures:", len(failures), json.dumps(failures))
     try:
         selected = sample_claims(candidates, args.n, args.seed)
