@@ -55,3 +55,11 @@ evals/human_labels.completed*.json
 # A manually reviewed final baseline summary may be committed separately.
 
 *.validation-failures.json
+
+# Local experiments, database exports, and private key material
+/playground/
+*.dump
+*.sqlite-wal
+*.sqlite-shm
+*.pem
+*.key

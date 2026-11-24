@@ -1,89 +1,74 @@
-# Pingo
+# Pingo AI Customer Support Agent
 
-Pingo triages support email for Gears and Co, a fictional retailer selling a 65 W USB-C charger, a 20,000 mAh power bank, and wireless Bluetooth earbuds.
+Pingo turns support email into a cited reply draft for a human reviewer. Its demo retailer, Gears and Co, sells chargers, power banks, and wireless earbuds. A plausible answer can still invent product behavior or promise a refund. Pingo retrieves company articles, validates model output, and records why each message became a draft or an escalation. Email delivery is disabled by default.
 
-## Run locally
+## Architecture
 
-1. Run `uv sync --locked` with Python 3.13.
-2. Copy `scripts/.env.example` to `.env` and fill in your test Gmail OAuth, Supabase PostgreSQL, and Groq credentials. Keep `DRY_RUN=true`.
-3. On your development database, apply all pending migrations before starting the worker. Run `uv run python -m scripts.seed_knowledge_base` to upsert the fictional articles. Run it again after editing the Markdown.
-4. Run `uv run python -m app.poller` using a test inbox. Dry-run mode writes tickets and drafts to PostgreSQL and applies Gmail labels. Use `uv run uvicorn app.main:app` for the separate health endpoint.
-
-## How decisions work
-
-Gmail messages are claimed by unique message ID before processing. Python checks the subject and body for safety, refund, legal, sensitive-data, and suspicious instructions before involving Groq. The 20B model classifies routine requests. Python loads the chosen PostgreSQL section and company policies, plus the product catalog for troubleshooting. The 120B model returns a structured draft via Groq's native JSON schema mode. Pydantic validates the structure. Python checks the proposed action and can route the case to human review.
-
-Drafts and execution traces are stored in `events.result`. Human review decisions are stored in `draft_reviews`. Escalations also update the ticket and apply the Gmail `needs-human` label. Event and ticket updates share a database transaction. If Gmail labeling fails after that commit, the next poll reapplies labels from the stored decision. Processing errors are capped at three attempts, with retry delays of 30 and 60 seconds before polling delay. An uncompleted claim becomes eligible for recovery after five minutes when the message is polled again. The attempt number prevents an old worker from overwriting a newer result. Exhausted events receive the Gmail `needs-human` and `ai-processed` labels and remain available for inspection in PostgreSQL. Replaying an exhausted event requires resetting its database claim and clearing the Gmail processed label after review. Delivery uses a separate explicit request after approval, with `DELIVERY_ENABLED=false` as the default.
-
-## Test and evaluate
-
-```sh
-uv run --with pytest python -m pytest -q
+```mermaid
+flowchart TD
+    A[Gmail inbox] --> B[Manual check or polling worker]
+    B --> C[Claim event in PostgreSQL]
+    C --> D{Safety and routing rules}
+    D -->|Sensitive request| H[Human review]
+    D -->|Routine request| E[Groq classification]
+    E --> F[Retrieve knowledge sections from PostgreSQL]
+    F --> G[Generate structured draft and verify citations]
+    G --> H
+    H --> I[Persist approval or rejection]
+    I -->|Approved and delivery explicitly enabled| J[Separate Gmail send action]
 ```
 
-The default suite uses mocks, including an HTTP transport test for Groq's request schema. The opt-in run below calls Groq with synthetic messages and uses Markdown fixtures for retrieval. It prints routing and model classification accuracy, safety recall, draft checks, structured-output success, and latency. Keyword checks cover the golden fixtures and require human review for broader factual accuracy.
+The backend uses Python 3.13, FastAPI, Pydantic AI, Groq, psycopg, and the Gmail API with OAuth. FastAPI serves the plain HTML, CSS, and JavaScript dashboard. Supabase hosts PostgreSQL. Docker packages the web process and GitHub Actions defines test and image-build jobs.
+
+## How an email moves through the system
+
+1. The poller claims a Gmail message by its unique ID. Tickets group messages by thread. Processing leases and bounded attempts support recovery after interruption.
+2. Python checks untrusted email text for refund, safety, injury, legal, sensitive-data, and suspicious-instruction cases. Routine messages go to the Groq-hosted GPT-OSS 20B classifier.
+3. Python retrieves the selected knowledge-base section and supporting policies. GPT-OSS 120B generates a structured reply with article IDs, snippets, and cited claims. The versioned generation prompt is stored under `prompts/`.
+4. The validator checks that each cited article was retrieved, its snippet occurs in that article, and the cited claim occurs in the reply. Invalid evidence routes the case to review. A matching snippet can still be irrelevant to the claim.
+5. The dashboard shows tickets, drafts, approval decisions, and execution traces. Reviewers can edit drafts and approve or reject them. Approval persists independently of sending. An uncertain delivery outcome requires manual reconciliation.
+
+## Local setup
+
+Install Python 3.13 and uv. From the repository root:
 
 ```sh
-PINGO_LIVE_GROQ=1 uv run --with pytest python -m pytest -q -s tests/test_live_groq.py
+uv sync --locked
+test -f .env || cp .env.example .env
+chmod 600 .env
 ```
 
-## Dashboard and free hosting
+Use a dedicated demo Gmail account and a development database. Fill the following values privately in `.env`.
 
-Set a unique `DASHBOARD_PASSWORD`, open `http://localhost:8000`, and sign in with `DASHBOARD_USERNAME` (default `admin`). Use the case queue to read inbound messages, edit drafts, and record approvals or rejections. A review is final for that draft. When delivery is explicitly enabled, the send action uses the exact stored approved text. **Check Gmail** checks one unprocessed inbox message on demand. Use a dedicated test inbox. Pingo can write database records and apply Gmail labels.
+| Variables | Purpose |
+| --- | --- |
+| `DATABASE_URL` | TLS PostgreSQL connection URI for the demo database |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Gmail OAuth client credentials |
+| `GOOGLE_REFRESH_TOKEN` | Offline access for the dedicated inbox |
+| `GROQ_API_KEY` | Classifier and reply generation |
+| `DASHBOARD_USERNAME`, `DASHBOARD_PASSWORD` | Single reviewer login |
+| `DRY_RUN=true`, `DELIVERY_ENABLED=false` | Process messages and save drafts with sending disabled |
+| `GOOGLE_REDIRECT_URI` | Hosted OAuth callback when using the web client flow |
 
-See [DEPLOY.md](DEPLOY.md) for the Docker Render blueprint, Gmail OAuth, and the hosted smoke checklist.
-
-## Approved delivery
-
-Keep `DRY_RUN=true` for ingestion. `DELIVERY_ENABLED` is a separate switch, false by default. Apply the approved-delivery migration before using the dashboard.
-
-When enabled in a test environment, **Send approved reply** claims a delivery record once. It refuses rejected, superseded, escalated, or already attempted cases. On an uncertain Gmail outcome, inspect the Gmail sent folder and reconcile the delivery record manually. Retrying uncertain delivery automatically could send a duplicate.
-
-The API currently supports a single reviewer account through HTTP Basic authentication. Host it behind HTTPS. It does not yet provide an OAuth account-connection page, multiple reviewers, or automatic scheduling on a sleeping free host.
-
-## Evaluation baseline and execution evidence
-
-Run `uv run python -m evals.run --live` to evaluate the synthetic golden cases with Groq and PostgreSQL knowledge retrieval. It stores a report in `evaluation_runs` and `evals/results/latest.json`. Reports include routing accuracy, per-class precision/recall/F1, safety recall, structured stage success, latency, model names, and prompt and knowledge fingerprints. The small starter dataset needs expansion before drawing quality conclusions.
-
-Keyword checks identify selected known failure patterns. Correctness, groundedness, and retrieval relevance remain unmeasured until human grading. Inference cost is unmeasured because no verified rate schedule is configured. No LLM-selected tools are used.
-
-Draft execution history records stage timing, token usage, and retrieved article titles and fingerprints without copying raw model messages into telemetry. Customer messages and drafts remain sensitive database records.
-
-## Build and CI
-
-`docker build -t pingo .` builds the web service. Run with `docker run --rm --env-file .env -p 8000:8000 pingo`. CI runs mocked tests and the Docker build. Neither Docker nor CI has been verified in the current restricted development environment.
-
-`/health` checks the running API. Authenticated `/ready` checks required database columns required demo configuration, and knowledge section count.
-
-Knowledge edits made through the dashboard have an audit record and reject stale edits. Markdown reseeding overwrites matching article contents, so export dashboard edits into Markdown before reseeding.
-
-## Current verification limits
-
-The runtime installed from the lockfile in an isolated local environment. See the test summary and hosted smoke checklist for verification of external integrations.
-
-## Citation integrity
-
-New generated replies include claim-to-source records with a retrieved article ID and a verbatim supporting snippet. Python checks that the article was retrieved, that the snippet occurs in its content, and that the claim occurs in the draft. Missing or invalid citations route the case to review with an empty customer reply. Citation evidence is stored with the decision and displayed in execution history.
-
-These checks establish citation integrity only. They do not establish that the snippet entails the claim or that every factual claim was cited. For example, a real Bluetooth quote could still be attached to an invented LED claim. Semantic evaluation and human review remain necessary. Existing drafts keep their original evidence, if any, and must be reviewed as historical outputs. The citation prompt is versioned as pingo-v2-citations. No before/after hallucination rate has been measured yet.
-
-## Groundedness judge and calibration
-
-The offline judge in `evals/groundedness.py` first extracts atomic claims from the draft without seeing generator citations or the knowledge base. A second call judges every extracted claim against the full generation-time article snapshots, using supported, unsupported, or contradicted labels. Python rejects fabricated judge evidence and missing/duplicate inventory judgments. Extraction completeness and semantic judgments still need human review.
-
-New `evals.run` reports preserve the generated draft, even if citation validation later rejects it, and its actual retrieved articles in `generation_evidence`. This capture is enabled only during synthetic evaluation runs. Older reports lacking snapshots cannot be retrospectively graded reliably by looking up today's articles.
-
-The calibration scaffold contains 15 synthetic drafts and 45 claims. It mixes supported drafts, altered facts, and misleading authentic citations. Seed labels are author-provided development labels, not independent human judgments. These cases are repetitive controls and do not establish generalization. Use `evals/human_evidence.json` and fill a copy of `evals/human_labels.template.json` before inspecting seed or judge labels. Labels are supported, unsupported, or contradicted. Do not edit the template itself. Review whether claims were extracted completely on additional natural drafts.
-
-Both live commands require an explicit Groq judge model and check account-visible models before calling it:
+Enable the Gmail API and authorize the demo account. For a local desktop OAuth client run `uv run python -m scripts.get_refresh_token`. For hosted OAuth, follow [DEPLOY.md](DEPLOY.md). Apply pending SQL files in `supabase/migrations/` in timestamp order. On a fresh database, apply all migrations. Then run:
 
 ```sh
-uv run python -m evals.calibrate --live --judge-model groq:MODEL_ID --human-labels evals/human_labels.completed.json
-uv run python -m evals.judge_report evals/results/latest.json --live --judge-model groq:MODEL_ID
+uv run python -m scripts.seed_knowledge_base
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8000 --no-access-log
 ```
 
-Replace MODEL_ID with a model accessible to your Groq account. Model-family diversity is useful only after availability and judge calibration are verified. No paid provider or fallback is introduced.
+Open http://127.0.0.1:8000 and sign in. **Check Gmail** processes one inbox message. Dry-run intake still writes tickets and applies Gmail labels. The public `/health` endpoint checks the process. Authenticated `/ready` checks configuration, schema access, and knowledge seeding.
 
-Seed results measure agreement with reference annotations. Natural results use labels supplied for the sampled drafts. They report unsupported precision/recall, confusion counts, case failures, and sample size. Report judging measures extracted-claim and affected-draft rates, distinguishing unsupported from contradicted claims. Deterministic specificity flags are observation-only lexical checks, with no send-blocking effect. Calibration reports observation rates against the supplied labels.
+## Tests and evaluations
 
-The operator ran live seeded grading and partial extraction. A full extraction report, natural calibration, and a paired prompt comparison are pending. The original generation prompt has no committed history in this checkout. A historical baseline requires an archived prompt or an explicitly documented reconstruction. Keep input cases, article snapshots, and model settings identical across a comparison, and save each report to a distinct output filename.
+```sh
+PINGO_LIVE_GROQ=0 uv run --no-sync --with pytest python -m pytest -q
+```
+
+The default suite exercises routing, citation rejection, structured outputs, provider failures, duplicate events, reviewer authorization, and delivery safeguards with mocked dependencies. Live provider checks require explicit opt-in. The evaluation harness supports seeded claims, extraction coverage, agreement with reference annotations, and prompt-version replay. Raw reports and completed human-label files are local artifacts. See [the evaluation protocol](docs/phase1b.md).
+
+## Limitations and planned work
+
+The dashboard supports one reviewer. Its login limiter runs in process. Citation checks establish provenance, while factual support and coverage require separate evaluation. In a live replay of one Bluetooth email, v2 passed citation validation in 3 of 10 drafts and v3 in 5 of 10. These counts describe repeated generations for one input.
+
+Planned work includes evaluating a bounded citation correction, measuring groundedness on independently labeled natural drafts, and verifying the hosted review workflow. The repository contains a Render configuration and [deployment checklist](DEPLOY.md). Public deployment and a successful hosted CI run still require verification.
